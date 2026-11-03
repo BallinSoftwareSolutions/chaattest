@@ -1,6 +1,14 @@
-# Validation · Maxifying 0.3
+# Validation · Maxifying 0.5
 
 The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10; Wine outcomes do not establish native Windows behavior or gaming performance.
+
+## Added in 0.5
+
+- Pure tests cover UTF-16 caret movement, complete-character length limits, malformed paste rejection and single-line control filtering.
+- Optional-app policy tests reject protected/unknown package names, mismatched publisher identities and command injection. They verify current-user-only removal, framework/non-removable revalidation and post-removal readback in the generated script.
+- Power-policy tests preserve unrelated flags and the original baseline while changing only execution-speed throttling.
+- GUI smoke tests verify that cancelling a modal restores the original text-field focus/selection and that Tab skips window chrome.
+- Native **EcoQoS getter/setter/restore** and **PowerShell/Appx inventory/removal** are unrun. Wine cannot validate these features. No app was actually uninstalled by the automated tests. Read-only inventory is cancellable; an active package deployment is never killed by the app.
 
 ## UI regression checks in 0.4
 
@@ -9,12 +17,12 @@ The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10
 - Explicit premultiplied-alpha surfaces remove the old text afterimage observed during testing.
 - Font metrics, caret endpoints and Danish Unicode case folding are checked. The Wine environment lacks a working Segoe UI alias, so a validated DejaVu Sans fallback is used there. Windows normally uses Segoe UI.
 - Navigation remains available while an artificial worker is pending. The UI test performs no real system optimization.
-- Captured dashboard, settings, all three focus modes, network, restoration, search, category filters and custom confirmation/error dialogs from the running executable.
+- Captured dashboard, settings, all four focus modes, network, restoration, search, category filters and custom confirmation/error dialogs from the running executable.
 - Existing animation-math tests verify settling, bounds, interruption continuity and frame independence.
 
 ## Verified
 
-- CMake configured and built the application, resources and test target successfully. CTest ran the Windows test executable through Wine: **2/2 tests passed**.
+- CMake configured and built the application, resources and test target successfully. CTest ran the Windows test executable through Wine: **4/4 tests passed**.
 
 - Release executable built with MinGW, C++17, `-Wall -Wextra -Werror`, static C++ runtime, embedded icon, manifest and version information.
 - Synthetic registry tests: missing original value, original binary data/type, repeated changes retaining the first baseline, repeated restore, backup collision rejection, GPU preference merge preserving unrelated tokens, fullscreen flags preserving existing compatibility flags, missing game executable rejection before backup, and unique/described feature catalog.

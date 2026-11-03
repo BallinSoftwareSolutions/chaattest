@@ -1,8 +1,19 @@
-# Maxifying 0.4 · Performance Studio
+# Maxifying 0.5 · Performance Studio
 
 **[Download Maxifying.exe](https://github.com/BallinSoftwareSolutions/chaattest/raw/refs/heads/gametune-download/downloads/Maxifying.exe)**
 
 Hvis download ikke starter: [åbn filen på GitHub](https://github.com/BallinSoftwareSolutions/chaattest/blob/gametune-download/downloads/Maxifying.exe), og klik på pilen **Download raw file**. Log ind på GitHub, hvis repository'et er privat. Find derefter filen i Downloads på din Windows 11-pc.
+
+## Nyt i 0.5
+
+- **EcoQoS pr. spilproces:** under Fokus → Kørende apps kan execution-speed throttling slås fra for den valgte proces, når Windows understøtter det. Andre power-flags bevares. Originaltilstanden gendannes sammen med prioriteten ved normal applukning eller via Gendan session. Et crash kan efterlade sessionsvalget aktivt, indtil spillet afsluttes. Ingen globale timer-, HPET- eller driverændringer, og ingen garanteret latencygevinst.
+- **Valgfrie Windows-apps:** Fokus → Windows-apps læser den aktuelle brugers pakker via Windows PowerShell/Appx og viser kun ni kendte valgfrie appnavne. Den valgte pakke kontrolleres igen før fjernelse, og resultatet læses tilbage. Store, frameworks, sikkerhed og gaming-tjenester er ikke i listen. Ingen `-AllUsers` eller fjernelse af provisionerede systempakker.
+- **Afinstallation er ikke en backup-funktion:** appdata kan slettes, og Gendan alle geninstallerer ikke apps. Handlingen kræver en særskilt bekræftelse med pakkens identitet. Store-linket er en mulighed for geninstallation, ikke gendannelse af lokale data. Windows-opdateringer eller nye brugere kan få apps installeret igen.
+- **UI-polish i den eksisterende stil:** dialoger giver fokus og markering tilbage til tekstfeltet; Tab vælger ikke vinduets luk-knap; clipboard-fejl sletter ikke markeret tekst; Unicode-tegn deles ikke ved feltets længdegrænse.
+
+Installerede apps koster især gaming-performance, hvis de også kører eller starter i baggrunden. Afinstallation alene dokumenterer ikke lavere input-latency. Processantal og RAM er observerede Windows-værdier, ikke en FPS-score.
+
+De nye EcoQoS- og Appx-forløb kræver native Windows 11-afprøvning. Wine viser dem som utilgængelige; det er ikke et bestået funktionstestresultat.
 
 ## Hvad er nyt?
 
