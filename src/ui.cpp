@@ -1,164 +1,294 @@
 #include "ui.h"
 #include "motion.h"
-#include <commctrl.h>
-#include <windowsx.h>
-#include <unordered_map>
+#include <algorithm>
 #include <cmath>
-#include <string>
 namespace ui {
 namespace {
-HWND root;
-HFONT face;
-double scale=1;
-int selected=100;
-constexpr COLORREF panel=RGB(20,26,36),navBase=RGB(16,21,30),accent=RGB(242,190,89),green=RGB(118,214,165),white=RGB(234,239,247),muted=RGB(143,157,178);
-int px(int n){return static_cast<int>(n*scale+.5);}
-double now(){return static_cast<double>(GetTickCount64());}
-void frames(){if(root)PostMessageW(root,requestFrame,0,0);}
-struct Button {
- bool navigation=false,tracking=false,active=false;
- motion::Tween hover,pressed,selection,toggle;
- double ripple=-10000;
- POINT origin{};
-};
-std::unordered_map<HWND,Button> buttons;
-std::unordered_map<int,motion::Tween> hover;
-std::unordered_map<int,double> pulses;
-motion::Tween rail;
-HDC buffer=nullptr,previous=nullptr;
-HBITMAP bitmap=nullptr,previousBitmap=nullptr;
-HGDIOBJ oldBitmap=nullptr,oldPrevious=nullptr;
-int width=0,height=0;
-double transition=-10000;
-bool transitionsEnabled=true;
-int hovered=-1;
-bool hadMotion=false;
-void destroyBuffers(){
- if(buffer){SelectObject(buffer,oldBitmap);DeleteObject(bitmap);DeleteDC(buffer);}
- if(previous){SelectObject(previous,oldPrevious);DeleteObject(previousBitmap);DeleteDC(previous);}
- buffer=previous=nullptr;bitmap=previousBitmap=nullptr;width=height=0;
+template <class T> void drop(T *&p) {
+  if (p)
+    p->Release();
+  p = nullptr;
 }
-void fill(HDC dc,RECT r,COLORREF color){auto brush=CreateSolidBrush(color);FillRect(dc,&r,brush);DeleteObject(brush);}
-LRESULT CALLBACK subclass(HWND w,UINT message,WPARAM a,LPARAM b,UINT_PTR,DWORD_PTR){
- auto it=buttons.find(w);
- if(it!=buttons.end()){
-  auto& state=it->second;
-  switch(message){
-  case WM_MOUSEMOVE:
-   if(!state.tracking){TRACKMOUSEEVENT track{sizeof track,TME_LEAVE,w,0};TrackMouseEvent(&track);state.tracking=true;state.hover.target(1,now(),140);frames();}
-   PostMessageW(root,pointerMoved,0,0);break;
-  case WM_MOUSELEAVE:state.tracking=false;state.hover.target(0,now(),180);PostMessageW(root,pointerMoved,0,0);frames();break;
-  case WM_LBUTTONDOWN:state.origin={GET_X_LPARAM(b),GET_Y_LPARAM(b)};state.ripple=now();state.pressed.target(1,now(),65);frames();break;
-  case WM_KEYDOWN:if(a==VK_SPACE){RECT r;GetClientRect(w,&r);state.origin={r.right/2,r.bottom/2};state.ripple=now();state.pressed.target(1,now(),65);frames();}break;
-  case WM_LBUTTONUP:case WM_CAPTURECHANGED:case WM_CANCELMODE:state.pressed.target(0,now(),170);frames();break;
-  case WM_KEYUP:if(a==VK_SPACE){state.pressed.target(0,now(),170);frames();}break;
-  case WM_ENABLE:if(!a){state.hover.target(0,now());state.pressed.target(0,now());state.tracking=false;TRACKMOUSEEVENT track{sizeof track,TME_CANCEL|TME_LEAVE,w,0};TrackMouseEvent(&track);frames();}break;
-  case WM_ERASEBKGND:return 1;
-  case WM_NCDESTROY:RemoveWindowSubclass(w,subclass,1);buttons.erase(it);return DefSubclassProc(w,message,a,b);
+D2D1_COLOR_F color(unsigned c, float opacity = 1) {
+  return D2D1::ColorF(c, opacity);
+}
+} // namespace
+unsigned mix(unsigned a, unsigned b, double t) {
+  t = std::clamp(t, 0.0, 1.0);
+  unsigned r = 0;
+  for (int shift : {0, 8, 16}) {
+    int aa = (a >> shift) & 255, bb = (b >> shift) & 255;
+    r |= static_cast<unsigned>(aa + (bb - aa) * t) << shift;
   }
- }
- return DefSubclassProc(w,message,a,b);
+  return r;
 }
+Painter::Painter(ID2D1RenderTarget *value, IDWriteFactory *w,
+                 std::map<unsigned long long, IDWriteTextFormat *> &f, const std::wstring &chosen)
+    : target(value), write(w), family(chosen), fonts(f) {
+  target->CreateSolidColorBrush(color(white), &brush);
 }
-COLORREF blend(COLORREF a,COLORREF b,double t){
- t=std::clamp(t,0.0,1.0);return RGB(static_cast<int>(GetRValue(a)+(GetRValue(b)-GetRValue(a))*t),static_cast<int>(GetGValue(a)+(GetGValue(b)-GetGValue(a))*t),static_cast<int>(GetBValue(a)+(GetBValue(b)-GetBValue(a))*t));
+Painter::~Painter() {
+  drop(brush);
 }
-void rounded(HDC dc,RECT r,COLORREF color,COLORREF stroke,int radius){
- auto brush=CreateSolidBrush(color);auto pen=CreatePen(PS_SOLID,1,stroke);auto oldBrush=SelectObject(dc,brush),oldPen=SelectObject(dc,pen);
- RoundRect(dc,r.left,r.top,r.right,r.bottom,radius,radius);SelectObject(dc,oldBrush);SelectObject(dc,oldPen);DeleteObject(brush);DeleteObject(pen);
+void Painter::rect(Rect r, unsigned c, float a) {
+  brush->SetColor(color(c, a));
+  target->FillRectangle(r.native(), brush);
 }
-void initialize(HWND w,HFONT font,double factor){
- root=w;face=font;scale=factor;rail.snap(142);
- BOOL enabled=TRUE;if(SystemParametersInfoW(SPI_GETCLIENTAREAANIMATION,0,&enabled,0))transitionsEnabled=enabled!=FALSE;
+void Painter::round(Rect r, unsigned c, float radius, float a) {
+  brush->SetColor(color(c, a));
+  target->FillRoundedRectangle(D2D1::RoundedRect(r.native(), radius, radius), brush);
 }
-void dispose(){destroyBuffers();buttons.clear();hover.clear();pulses.clear();root=nullptr;}
-void styleButton(HWND button,bool navigation){
- auto& state=buttons[button];state.navigation=navigation;state.selection.snap(navigation&&GetDlgCtrlID(button)==selected?1:0);
- SetWindowSubclass(button,subclass,1,0);
+void Painter::border(Rect r, unsigned c, float radius, float a, float thickness) {
+  brush->SetColor(color(c, a));
+  target->DrawRoundedRectangle(D2D1::RoundedRect(r.native(), radius, radius), brush, thickness);
 }
-void selectedNavigation(int id){
- selected=id;double t=now();rail.target(142+(id-100)*48,t,210);
- for(auto& entry:buttons)if(entry.second.navigation)entry.second.selection.target(GetDlgCtrlID(entry.first)==id?1:0,t,180);
- frames();
+void Painter::gradient(Rect r, unsigned top, unsigned bottom, float radius) {
+  D2D1_GRADIENT_STOP stops[] = {{0, color(top)}, {1, color(bottom)}};
+  ID2D1GradientStopCollection *collection = nullptr;
+  ID2D1LinearGradientBrush *gradient = nullptr;
+  if (SUCCEEDED(target->CreateGradientStopCollection(stops, 2, &collection)) &&
+      SUCCEEDED(target->CreateLinearGradientBrush(
+          D2D1::LinearGradientBrushProperties(D2D1::Point2F(r.x, r.y),
+                                              D2D1::Point2F(r.x + r.w, r.y + r.h)),
+          collection, &gradient)))
+    target->FillRoundedRectangle(D2D1::RoundedRect(r.native(), radius, radius), gradient);
+  else
+    round(r, bottom, radius);
+  drop(gradient);
+  drop(collection);
 }
-void applied(HWND button,bool active,bool animate){
- auto it=buttons.find(button);if(it==buttons.end())return;auto& state=it->second;
- state.active=active;if(animate)state.toggle.target(active?1:0,now(),220);else state.toggle.snap(active?1:0);
- InvalidateRect(button,nullptr,FALSE);if(animate)frames();
-}
-void hoverCard(int index){
- if(index==hovered)return;
- hovered=index;
- double t=now();for(auto& entry:hover)entry.second.target(entry.first==index?1:0,t,200);
- if(index>=0)hover[index].target(1,t,150);
- frames();
-}
-void pulseCard(int index){pulses[index]=now();frames();}
-double cardHover(int index){auto found=hover.find(index);return found==hover.end()?0:found->second.value(now());}
-double cardPulse(int index){auto found=pulses.find(index);return found==pulses.end()?0:std::max(0.0,1.0-(now()-found->second)/650.0);}
-double navigationY(){return rail.value(now());}
-HDC canvas(HDC target,int w,int h){
- if(w!=width||h!=height){destroyBuffers();width=w;height=h;buffer=CreateCompatibleDC(target);previous=CreateCompatibleDC(target);bitmap=CreateCompatibleBitmap(target,w,h);previousBitmap=CreateCompatibleBitmap(target,w,h);oldBitmap=SelectObject(buffer,bitmap);oldPrevious=SelectObject(previous,previousBitmap);transition=-10000;}
- return buffer;
-}
-void beginTransition(){
- if(!buffer||!transitionsEnabled)return;
- HDC dc=GetDC(root);BitBlt(previous,0,0,width,height,dc,0,0,SRCCOPY);ReleaseDC(root,dc);transition=now();frames();
-}
-void present(HDC target,RECT dirty){
- int w=dirty.right-dirty.left,h=dirty.bottom-dirty.top;
- BitBlt(target,dirty.left,dirty.top,w,h,buffer,dirty.left,dirty.top,SRCCOPY);
- double t=(now()-transition)/190.0;
- if(t>=0&&t<1){RECT content{px(208),px(58),width,px(782)},area{};
-  if(IntersectRect(&area,&content,&dirty)){w=area.right-area.left;h=area.bottom-area.top;BitBlt(target,area.left,area.top,w,h,previous,area.left,area.top,SRCCOPY);
-   BLENDFUNCTION alpha{AC_SRC_OVER,0,static_cast<BYTE>(255*motion::ease(t)),0};AlphaBlend(target,area.left,area.top,w,h,buffer,area.left,area.top,w,h,alpha);
+void Painter::text(const std::wstring &value, Rect r, float size, unsigned c, bool bold,
+                   DWRITE_TEXT_ALIGNMENT align, float opacity) {
+  auto key = static_cast<unsigned long long>(size * 10) * 100 + (bold ? 10 : 0) +
+             static_cast<unsigned>(align);
+  auto &format = fonts[key];
+  if (!format) {
+    if (FAILED(write->CreateTextFormat(
+            family.c_str(), nullptr,
+            bold ? DWRITE_FONT_WEIGHT_SEMI_BOLD : DWRITE_FONT_WEIGHT_NORMAL,
+            DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, size, L"da-DK", &format)))
+      return;
+    format->SetTextAlignment(align);
+    format->SetWordWrapping(DWRITE_WORD_WRAPPING_WRAP);
   }
- }
+  brush->SetColor(color(c, opacity));
+  target->DrawText(value.c_str(), static_cast<UINT32>(value.size()), format, r.native(), brush,
+                   D2D1_DRAW_TEXT_OPTIONS_CLIP);
 }
-bool tick(){
- double t=now();bool active=false;
- for(auto& entry:buttons){auto& s=entry.second;int id=GetDlgCtrlID(entry.first);bool cardMoving=false;
-  if(id>=1000){int index=(id-1000)/3;auto found=hover.find(index);cardMoving=(found!=hover.end()&&found->second.moving(t))||cardPulse(index)>0;}
-  bool moving=cardMoving||s.hover.moving(t)||s.pressed.moving(t)||s.selection.moving(t)||s.toggle.moving(t)||(t-s.ripple<360);
-  if(moving){InvalidateRect(entry.first,nullptr,FALSE);active=true;}
- }
- bool content=t-transition<190;
- for(auto& entry:hover)if(entry.second.moving(t)){active=true;content=true;}
- for(auto it=pulses.begin();it!=pulses.end();){if(t-it->second>=650)it=pulses.erase(it);else{active=true;content=true;++it;}}
- if(content){RECT r{px(208),px(58),width,px(782)};InvalidateRect(root,&r,FALSE);active=true;}
- if(rail.moving(t)){RECT r{px(10),px(132),px(22),px(710)};InvalidateRect(root,&r,FALSE);active=true;}
- // Paint the exact settled frame as well, avoiding a permanently half-moved switch.
- if(!active&&hadMotion){for(auto& entry:buttons)InvalidateRect(entry.first,nullptr,FALSE);RECT r{0,0,width,height};InvalidateRect(root,&r,FALSE);}
- hadMotion=active;
- return active;
+void Painter::line(float x, float y, float xx, float yy, unsigned c, float thickness,
+                   float opacity) {
+  brush->SetColor(color(c, opacity));
+  target->DrawLine(D2D1::Point2F(x, y), D2D1::Point2F(xx, yy), brush, thickness);
 }
-void drawButton(const DRAWITEMSTRUCT& item){
- auto it=buttons.find(item.hwndItem);if(it==buttons.end())return;auto& state=it->second;double t=now();
- int w=item.rcItem.right-item.rcItem.left,h=item.rcItem.bottom-item.rcItem.top;
- HDC dc=CreateCompatibleDC(item.hDC);HBITMAP image=CreateCompatibleBitmap(item.hDC,w,h);auto old=SelectObject(dc,image);
- RECT bounds{0,0,w,h};bool disabled=(item.itemState&ODS_DISABLED)!=0,nav=state.navigation;
- bool switchButton=!nav&&item.CtlID>=1000&&(item.CtlID-1000)%3==0;
- COLORREF under=nav?navBase:panel;
- if(!nav&&item.CtlID>=1000){int index=static_cast<int>((item.CtlID-1000)/3);under=blend(panel,RGB(28,35,47),cardHover(index));under=blend(under,green,cardPulse(index)*.08);}
- fill(dc,bounds,under);
- double hot=disabled?0:state.hover.value(t),pressed=state.pressed.value(t),selection=state.selection.value(t),on=state.toggle.value(t);
- COLORREF color=nav?blend(navBase,RGB(57,45,29),selection):disabled?RGB(27,33,43):RGB(40,38,34);
- color=blend(color,nav?RGB(48,43,33):RGB(67,57,38),hot*.7);color=blend(color,RGB(79,61,32),pressed*.7);
- if(switchButton)color=blend(color,RGB(23,55,45),on*.85);
- RECT body{px(1),px(1),w-px(1),h-px(1)};rounded(dc,body,color,blend(color,accent,hot*.32),px(nav?10:12));
- double ripple=(t-state.ripple)/360.0;
- if(!disabled&&ripple>=0&&ripple<1){auto clip=CreateRoundRectRgn(body.left,body.top,body.right,body.bottom,px(12),px(12));SelectClipRgn(dc,clip);
-  int radius=static_cast<int>(std::sqrt(static_cast<double>(w*w+h*h))*motion::ease(ripple));auto brush=CreateSolidBrush(blend(color,accent,(1-ripple)*.12));auto pen=CreatePen(PS_NULL,0,0);auto ob=SelectObject(dc,brush),op=SelectObject(dc,pen);
-  Ellipse(dc,state.origin.x-radius,state.origin.y-radius,state.origin.x+radius,state.origin.y+radius);SelectObject(dc,ob);SelectObject(dc,op);DeleteObject(brush);DeleteObject(pen);SelectClipRgn(dc,nullptr);DeleteObject(clip);
- }
- wchar_t label[180];GetWindowTextW(item.hwndItem,label,180);auto font=SelectObject(dc,face);SetBkMode(dc,TRANSPARENT);
- COLORREF text=disabled?RGB(92,105,121):nav?blend(muted,accent,selection):accent;if(switchButton&&on>.5)text=green;
- SetTextColor(dc,text);RECT area{px(nav?16:5),static_cast<LONG>(px(1)*pressed),w-px(5),h};
- if(switchButton){RECT track{px(10),h/2-px(7),px(38),h/2+px(7)};COLORREF trackColor=blend(RGB(67,75,88),RGB(62,157,111),on);rounded(dc,track,trackColor,trackColor,px(14));
-  int x=px(13)+static_cast<int>(px(13)*on);RECT thumb{x,h/2-px(4),x+px(8),h/2+px(4)};rounded(dc,thumb,white,white,px(8));area.left=px(43);
- }
- DrawTextW(dc,label,-1,&area,DT_VCENTER|DT_SINGLELINE|DT_NOPREFIX|(nav?DT_LEFT:DT_CENTER));
- if(item.itemState&ODS_FOCUS){RECT focus{px(3),px(3),w-px(3),h-px(3)};auto pen=CreatePen(PS_DOT,1,accent);auto op=SelectObject(dc,pen),ob=SelectObject(dc,GetStockObject(NULL_BRUSH));RoundRect(dc,focus.left,focus.top,focus.right,focus.bottom,px(9),px(9));SelectObject(dc,op);SelectObject(dc,ob);DeleteObject(pen);}
- SelectObject(dc,font);BitBlt(item.hDC,0,0,w,h,dc,0,0,SRCCOPY);SelectObject(dc,old);DeleteObject(image);DeleteDC(dc);
+void Painter::circle(float x, float y, float radius, unsigned c, float opacity) {
+  brush->SetColor(color(c, opacity));
+  target->FillEllipse(D2D1::Ellipse(D2D1::Point2F(x, y), radius, radius), brush);
 }
+float Painter::textWidth(const std::wstring &value, float size) {
+  auto key = static_cast<unsigned long long>(size * 10) * 100;
+  auto &format = fonts[key];
+  if (!format && FAILED(write->CreateTextFormat(
+                     family.c_str(), nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
+                     DWRITE_FONT_STRETCH_NORMAL, size, L"da-DK", &format)))
+    return 0;
+  IDWriteTextLayout *layout = nullptr;
+  float result = 0;
+  if (SUCCEEDED(write->CreateTextLayout(value.c_str(), static_cast<UINT32>(value.size()), format,
+                                        8192, 256, &layout))) {
+    DWRITE_TEXT_METRICS metrics{};
+    if (SUCCEEDED(layout->GetMetrics(&metrics)))
+      result = metrics.widthIncludingTrailingWhitespace;
+    layout->Release();
+  }
+  return result;
 }
+float Painter::textHeight(const std::wstring &value, float width, float size) {
+  auto key = static_cast<unsigned long long>(size * 10) * 100;
+  auto &format = fonts[key];
+  if (!format && FAILED(write->CreateTextFormat(
+                     family.c_str(), nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
+                     DWRITE_FONT_STRETCH_NORMAL, size, L"da-DK", &format)))
+    return 0;
+  IDWriteTextLayout *layout = nullptr;
+  float height = 0;
+  if (SUCCEEDED(write->CreateTextLayout(value.c_str(), static_cast<UINT32>(value.size()), format,
+                                        width, 8192, &layout))) {
+    DWRITE_TEXT_METRICS metrics{};
+    if (SUCCEEDED(layout->GetMetrics(&metrics)))
+      height = metrics.height;
+    layout->Release();
+  }
+  return height;
+}
+size_t Canvas::caretPosition(const std::wstring &value, float x) {
+  if (x <= 0 || value.empty())
+    return 0;
+  IDWriteTextFormat *format = nullptr;
+  IDWriteTextLayout *layout = nullptr;
+  size_t position = value.size();
+  if (SUCCEEDED(write->CreateTextFormat(fontFamily.c_str(), nullptr, DWRITE_FONT_WEIGHT_NORMAL,
+                                        DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 14,
+                                        L"da-DK", &format)) &&
+      SUCCEEDED(write->CreateTextLayout(value.c_str(), static_cast<UINT32>(value.size()), format,
+                                        8192, 128, &layout))) {
+    BOOL trailing = FALSE, inside = FALSE;
+    DWRITE_HIT_TEST_METRICS metrics{};
+    DWRITE_TEXT_METRICS textMetrics{};
+    if (SUCCEEDED(layout->GetMetrics(&textMetrics)) &&
+        x >= textMetrics.widthIncludingTrailingWhitespace)
+      position = value.size();
+    else if (SUCCEEDED(layout->HitTestPoint(x, 8, &trailing, &inside, &metrics)))
+      position = metrics.textPosition + (trailing ? metrics.length : 0);
+  }
+  drop(layout);
+  drop(format);
+  return std::min(position, value.size());
+}
+void Painter::opacity(Rect r, float amount) {
+  target->PushLayer(D2D1::LayerParameters(r.native(), nullptr, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
+                                          D2D1::IdentityMatrix(), amount),
+                    nullptr);
+}
+void Painter::endOpacity() {
+  target->PopLayer();
+}
+void Painter::clip(Rect r) {
+  target->PushAxisAlignedClip(r.native(), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+}
+void Painter::unclip() {
+  target->PopAxisAlignedClip();
+}
+void Canvas::releaseDevice() {
+  drop(scene);
+  drop(old);
+  drop(composed);
+  drop(target);
+  validFrame = false;
+  transition = -10000;
+}
+Canvas::~Canvas() {
+  releaseDevice();
+  for (auto &f : fonts)
+    drop(f.second);
+  drop(write);
+  drop(factory);
+}
+HRESULT Canvas::initialize(HWND w, float factor) {
+  window = w;
+  scale = factor;
+  auto r = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &factory);
+  if (FAILED(r))
+    return r;
+  r = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory),
+                          reinterpret_cast<IUnknown **>(&write));
+  if (FAILED(r))
+    return r;
+  // Validate a real glyph layout. Missing aliases in Wine must not create a textless UI.
+  for (const wchar_t *candidate : {L"Segoe UI", L"Arial", L"DejaVu Sans", L"Tahoma"}) {
+    IDWriteTextFormat *format = nullptr;
+    IDWriteTextLayout *layout = nullptr;
+    DWRITE_TEXT_METRICS metrics{};
+    bool usable = SUCCEEDED(write->CreateTextFormat(
+                      candidate, nullptr, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
+                      DWRITE_FONT_STRETCH_NORMAL, 16, L"da-DK", &format)) &&
+                  SUCCEEDED(write->CreateTextLayout(L"Maxifying", 9, format, 500, 80, &layout)) &&
+                  SUCCEEDED(layout->GetMetrics(&metrics)) && metrics.width > 0;
+    drop(layout);
+    drop(format);
+    if (usable) {
+      fontFamily = candidate;
+      break;
+    }
+  }
+  return ensure();
+}
+HRESULT Canvas::ensure() {
+  if (target)
+    return S_OK;
+  RECT client;
+  GetClientRect(window, &client);
+  auto properties = D2D1::RenderTargetProperties();
+  properties.dpiX = properties.dpiY = 96 * scale;
+  auto r = factory->CreateHwndRenderTarget(
+      properties,
+      D2D1::HwndRenderTargetProperties(window, D2D1::SizeU(client.right, client.bottom)), &target);
+  if (FAILED(r))
+    return r;
+  target->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+  for (auto output : {&scene, &old, &composed}) {
+    auto size = D2D1::SizeF(width, height);
+    auto format = D2D1::PixelFormat(DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED);
+    r = target->CreateCompatibleRenderTarget(&size, nullptr, &format,
+                                             D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS_NONE, output);
+    if (FAILED(r)) {
+      releaseDevice();
+      return r;
+    }
+    (*output)->SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE);
+    ++surfaces;
+  }
+  return S_OK;
+}
+void Canvas::transitionPage(double now) {
+  if (validFrame) {
+    if (snapshotSerial != serial) {
+      std::swap(old, composed);
+      snapshotSerial = serial;
+    }
+    transition = now;
+  }
+}
+HRESULT Canvas::draw(double now, const std::function<void(Painter &)> &content,
+                     const std::function<void(Painter &)> &frame) {
+  auto r = ensure();
+  if (FAILED(r))
+    return r;
+  scene->BeginDraw();
+  scene->Clear(color(background));
+  {
+    Painter p(scene, write, fonts, fontFamily);
+    content(p);
+  }
+  r = scene->EndDraw();
+  if (FAILED(r)) {
+    releaseDevice();
+    return r;
+  }
+  ID2D1Bitmap *current = nullptr, *previous = nullptr, *combined = nullptr;
+  scene->GetBitmap(&current);
+  old->GetBitmap(&previous);
+  composed->BeginDraw();
+  composed->Clear(color(background));
+  double t = motion::ease((now - transition) / 240);
+  if (validFrame && t < 1) {
+    composed->DrawBitmap(
+        previous,
+        D2D1::RectF(static_cast<float>(-8 * t), 0, width - static_cast<float>(8 * t), height), 1);
+    float shift = static_cast<float>(12 * (1 - t));
+    composed->DrawBitmap(current, D2D1::RectF(shift, 0, width + shift, height),
+                         static_cast<float>(t));
+  } else
+    composed->DrawBitmap(current);
+  r = composed->EndDraw();
+  composed->GetBitmap(&combined);
+  if (SUCCEEDED(r)) {
+    target->BeginDraw();
+    target->Clear(color(background));
+    target->DrawBitmap(combined);
+    {
+      Painter p(target, write, fonts, fontFamily);
+      frame(p);
+    }
+    r = target->EndDraw();
+  }
+  drop(current);
+  drop(previous);
+  drop(combined);
+  validFrame = SUCCEEDED(r);
+  if (validFrame)
+    ++serial;
+  if (r == static_cast<HRESULT>(D2DERR_RECREATE_TARGET))
+    releaseDevice();
+  return r;
+}
+} // namespace ui

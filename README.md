@@ -1,4 +1,4 @@
-# Maxifying 0.3 · Performance Studio
+# Maxifying 0.4 · Performance Studio
 
 **[Download Maxifying.exe](https://github.com/BallinSoftwareSolutions/chaattest/raw/refs/heads/gametune-download/downloads/Maxifying.exe)**
 
@@ -8,7 +8,7 @@ Hvis download ikke starter: [åbn filen på GitHub](https://github.com/BallinSof
 
 Maxifying hed tidligere GameTune. Eksisterende backups og historik genbruges, så du stadig kan gendanne gamle ændringer.
 
-Et native C++17-dashboard med mørkt design, gyldne accenter, side-navigation, søgning, aktuelle statusværdier, detaljer pr. indstilling og bekræftelse før ændringer. Vinduet skaleres ned, så det passer på mindre skærme. Ingen konto eller database.
+Et native C++17-dashboard med mørkt design, lime/lilla accenter, topnavigation, søgning, aktuelle statusværdier, detaljer pr. indstilling og bekræftelse før ændringer. Vinduet skaleres ned, så det passer på mindre skærme. Ingen konto eller database.
 
 | Kategori | Individuelle indstillinger |
 |---|---|
@@ -29,16 +29,17 @@ Et native C++17-dashboard med mørkt design, gyldne accenter, side-navigation, s
 - **Opstart:** deaktiver/gendan navngivne opstartsposter i den aktuelle brugers Run-nøgle. Programmet afinstalleres ikke. Task Managers godkendelser, tjenester, planlagte opgaver og andre brugere er uden for denne liste.
 - **Gendannelse:** individuelle backups, gendan alle inklusive tidligere valgte spil og opstartsposter, vedvarende aktivitetshistorik og eksport af en tekstrapport.
 
-## UI og animationer
+## Ny brugerflade i 0.4
 
-- Bufferbaseret vindues- og knaptegning, så baggrund og tekst vises samlet.
-- Statusopdateringer genbruger eksisterende knapper og bevarer tastaturfokus.
-- Korte hover-, tryk-, switch- og succesanimationer samt glidende sidepane-markering og sideovergange.
-- Almindelige ændringer, profiler, DNS-rydning og gendan alle kører i en worker, mens UI'en forbliver tilgængelig. Ændringsknapper låses under arbejdet, og succes vises først efter resultatet.
-- Bekræftelse bevares for profiler og valg, der ændrer strøm, tilgængelighed, følsomhed eller fullscreen-kompatibilitet. Andre individuelle valg anvendes ved direkte klik.
-- Animationstimeren stopper, når effekterne er afsluttet. Hardwareopdateringer tegner kun den relevante del af vinduet. Sideovergange respekterer Windows' klientanimationsindstilling ved opstart.
+- Ny arbejdsflade med topnavigation, redaktionelt overblik, indstillingsliste og separat detaljepanel. De 23 indstillinger og fire profiler er bevaret.
+- Hele UI'en tegnes i én Direct2D-flade med DirectWrite-tekst. Knapper, switches, søgefelter og bekræftelses-/fejldialoger er del af samme frame; der er ingen native børnekontroller, som kan blinke frem mellem sider.
+- Tre genbrugte renderflader sammensætter komplette sider med korte overgange. Pixel-formatet er eksplicit premultiplied alpha, så gamle tekstkonturer ikke hænger efter.
+- Egne dialoger viser effekt, originalbackup og tydelige Annuller/Anvend-knapper. Escape annullerer. OS-filvælgere bruges fortsat til valg af spil og rapportplacering.
+- Søgning via Ctrl+K, tastaturnavigation, tekstmarkering, kopi/indsæt og glidende listesrulning. Tekstfelternes caret bruger DirectWrite-metrik.
+- Arbejdet udføres stadig asynkront. Succes vises først, når ændringen er gennemført og læst tilbage. Animationstimeren stopper ved stilstand.
+- Windows' Segoe UI foretrækkes. En fallback vælges ud fra en faktisk glyph-layout-test, hvis fontnavnet ikke kan tegnes i test-/kompatibilitetsmiljøer.
 
-Færre processer er ikke i sig selv et mål for højere FPS. Fokusprofilen, opstartsoversigten og lukkeanmodninger kan reducere valgfri baggrundsaktivitet; Maxifying deaktiverer ikke alle Windows-baggrundsprocesser eller ombygger Windows som et OS-playbook.
+Færre processer er ikke i sig selv et mål for højere FPS. Fokusprofilen, opstartsoversigten og lukkeanmodninger reducerer kun den valgte baggrundsaktivitet; appen ombygger ikke Windows eller lukker alle systemprocesser.
 
 ## Virkning og kontrol
 

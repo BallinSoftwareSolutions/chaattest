@@ -2,13 +2,15 @@
 
 The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10; Wine outcomes do not establish native Windows behavior or gaming performance.
 
-## UI regression checks added in 0.3
+## UI regression checks in 0.4
 
-- Native Windows controls and keyboard focus survive 30 repeated same-page status refreshes. The test checks the actual HWND rather than only a screenshot.
-- Navigation works while an artificial worker is pending; the UI test changes no system setting.
-- Pure interpolation tests verify bounded movement, exact settling, continuity when hover direction changes, frame-rate independence and no fake initial-state transition. These ran natively on Linux and through the Windows CMake target in Wine.
-- The GUI smoke run captures all 11 pages plus search. A GDI-resource-count assertion is skipped because this Wine runtime does not implement GetGuiResources accounting; native Windows resource-leak testing remains outstanding.
-- Rendering now uses retained back buffers; same-page refreshes no longer recreate controls, and periodic hardware changes invalidate only the hardware panel. Short animation timers stop at rest.
+- Direct2D/DirectWrite single-surface renderer, with no native child controls on app pages or confirmation/error overlays.
+- 30 rapid page switches reuse the same three allocated composition surfaces. A serial guard preserves the current composed image when navigation is interrupted.
+- Explicit premultiplied-alpha surfaces remove the old text afterimage observed during testing.
+- Font metrics, caret endpoints and Danish Unicode case folding are checked. The Wine environment lacks a working Segoe UI alias, so a validated DejaVu Sans fallback is used there. Windows normally uses Segoe UI.
+- Navigation remains available while an artificial worker is pending. The UI test performs no real system optimization.
+- Captured dashboard, settings, all three focus modes, network, restoration, search, category filters and custom confirmation/error dialogs from the running executable.
+- Existing animation-math tests verify settling, bounds, interruption continuity and frame independence.
 
 ## Verified
 
@@ -18,13 +20,13 @@ The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10
 - Synthetic registry tests: missing original value, original binary data/type, repeated changes retaining the first baseline, repeated restore, backup collision rejection, GPU preference merge preserving unrelated tokens, fullscreen flags preserving existing compatibility flags, missing game executable rejection before backup, and unique/described feature catalog.
 - Eight supported SystemParametersInfo settings applied and restored in an isolated Wine prefix. Each restored setting was read directly through the Windows API and compared with its exact saved baseline: mouse acceleration, pointer trails, pointer speed, minimize/maximize animation, menu animation, tooltip animation, client-area animation and cursor shadow.
 - Three accessibility settings explicitly skipped because Wine reports the corresponding AVAILABLE flag unset: Sticky Keys, Toggle Keys and Filter Keys. Wine's source confirms the setters are unimplemented. The app marks such settings unavailable; these are not passing runtime tests.
-- GUI smoke navigation of all 11 pages plus search, at full and laptop-sized layouts. Screenshots are captured from the running executable, not design mockups.
+- Screenshots are captured from the running Direct2D executable, not design mockups.
 - Loopback ICMP test completed with 0/4 replies in this environment. The app showed the no-reply explanation and re-enabled its button. This validates error handling, not successful RTT measurement or external connectivity.
 
 ## Still requires native Windows 11 testing
 
 - Real games: FPS, frametimes, input latency and compatibility.
-- Accessibility setter behavior, display DPI changes, hardware GPU selection, browser-policy consumption, fullscreen behavior, power profiles/Modern Standby.
+- Accessibility setter behavior, display DPI changes, hardware GPU selection, browser-policy consumption, fullscreen behavior, power profiles/Modern Standby. Custom controls support keyboard navigation, but screen-reader/UI Automation integration is not implemented.
 - Successful ICMP replies on an unrestricted Windows network; DNS flush under standard and restricted accounts.
 - Process priority restoration, graceful app-close behavior and startup enable/disable with representative third-party applications. The registry backup primitives are tested; these end-to-end workflows remain unverified on Windows.
 
