@@ -1,10 +1,18 @@
-# Validation · GameTune 0.2
+# Validation · Maxifying 0.3
 
 The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10; Wine outcomes do not establish native Windows behavior or gaming performance.
 
+## UI regression checks added in 0.3
+
+- Native Windows controls and keyboard focus survive 30 repeated same-page status refreshes. The test checks the actual HWND rather than only a screenshot.
+- Navigation works while an artificial worker is pending; the UI test changes no system setting.
+- Pure interpolation tests verify bounded movement, exact settling, continuity when hover direction changes, frame-rate independence and no fake initial-state transition. These ran natively on Linux and through the Windows CMake target in Wine.
+- The GUI smoke run captures all 11 pages plus search. A GDI-resource-count assertion is skipped because this Wine runtime does not implement GetGuiResources accounting; native Windows resource-leak testing remains outstanding.
+- Rendering now uses retained back buffers; same-page refreshes no longer recreate controls, and periodic hardware changes invalidate only the hardware panel. Short animation timers stop at rest.
+
 ## Verified
 
-- CMake configured and built the application, resources and test target successfully. CTest ran the Windows test executable through Wine: **1/1 test passed**.
+- CMake configured and built the application, resources and test target successfully. CTest ran the Windows test executable through Wine: **2/2 tests passed**.
 
 - Release executable built with MinGW, C++17, `-Wall -Wextra -Werror`, static C++ runtime, embedded icon, manifest and version information.
 - Synthetic registry tests: missing original value, original binary data/type, repeated changes retaining the first baseline, repeated restore, backup collision rejection, GPU preference merge preserving unrelated tokens, fullscreen flags preserving existing compatibility flags, missing game executable rejection before backup, and unique/described feature catalog.
@@ -18,7 +26,7 @@ The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10
 - Real games: FPS, frametimes, input latency and compatibility.
 - Accessibility setter behavior, display DPI changes, hardware GPU selection, browser-policy consumption, fullscreen behavior, power profiles/Modern Standby.
 - Successful ICMP replies on an unrestricted Windows network; DNS flush under standard and restricted accounts.
-- Process priority restoration and startup enable/disable with representative third-party applications. The registry backup primitives are tested; these end-to-end workflows remain unverified on Windows.
+- Process priority restoration, graceful app-close behavior and startup enable/disable with representative third-party applications. The registry backup primitives are tested; these end-to-end workflows remain unverified on Windows.
 
 No test changes security mitigations, Windows Update, hardware interrupts or drivers. The default test suite uses synthetic keys only. The optional system-settings test must run in an isolated disposable environment.
 
