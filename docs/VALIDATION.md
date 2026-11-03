@@ -2,6 +2,11 @@
 
 The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10; Wine outcomes do not establish native Windows behavior or gaming performance.
 
+## Scroll polish after 0.5
+
+- Critically damped scrolling keeps position and forward velocity continuous across wheel bursts, stops at bounds and responds immediately to reversals. Fractional wheel deltas are preserved. Dialog text now uses the same animation.
+- Motion tests cover burst continuity, bounded travel, reversal, exact settling and fractional destinations.
+
 ## Added in 0.5
 
 - Pure tests cover UTF-16 caret movement, complete-character length limits, malformed paste rejection and single-line control filtering.

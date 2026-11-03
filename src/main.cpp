@@ -64,7 +64,8 @@ struct Hit {
 };
 std::vector<Hit> hits;
 std::map<int, motion::Tween> hovers, toggles;
-motion::Tween nav, inspector, notice, listPosition, focusPosition;
+motion::Tween nav, inspector, notice;
+motion::Scroll listPosition, focusPosition;
 bool modelReady = false, hitClipping = false;
 ui::Rect clipHits{};
 int statusTone = 0;
@@ -77,7 +78,8 @@ struct Dialog {
   std::wstring title, body, primary = L"Anvend", eyebrow = L"DU HAR KONTROLLEN";
   std::function<void()> accept;
   motion::Tween opacity;
-  float scroll = 0, maximum = 0;
+  motion::Scroll scroll;
+  float maximum = 0;
   int previousFocus = 0, previousInput = 0;
   size_t previousCursor = 0, previousAnchor = 0;
 } dialog;
@@ -223,7 +225,7 @@ void showDialog(const std::wstring &title, const std::wstring &body, const std::
   dialog.danger = danger;
   dialog.information = information;
   dialog.open = true;
-  dialog.scroll = 0;
+  dialog.scroll.snap(0);
   dialog.opacity.target(1, clockNow(), 180);
   keyboardFocus = danger && !information ? 9002 : 9001;
   inputFocus = 0;
@@ -1068,7 +1070,7 @@ void drawDialog(ui::Painter &p) {
          11, accent, true);
   p.text(dialog.title, {360, y + 79, 496, 80}, 29, ui::white, true);
   p.clip({360, y + 174, 496, 196});
-  p.text(dialog.body, {360, y + 174 - dialog.scroll, 496, 8000}, 15, ui::muted);
+  p.text(dialog.body, {360, y + 174 - static_cast<float>(dialog.scroll.value(clockNow())), 496, 8000}, 15, ui::muted);
   p.unclip();
   dialog.maximum = std::max(0.f, p.textHeight(dialog.body, 496, 15) - 196);
   if (dialog.maximum > 0)
@@ -1888,7 +1890,7 @@ void paint() {
 bool moving() {
   double now = clockNow();
   if (canvas.moving(now) || nav.moving(now) || inspector.moving(now) || notice.moving(now) ||
-      dialog.opacity.moving(now) || listPosition.moving(now) || focusPosition.moving(now) ||
+      dialog.opacity.moving(now) || dialog.scroll.moving(now) || listPosition.moving(now) || focusPosition.moving(now) ||
       job.valid() || pingJob.valid())
     return true;
   for (auto &h : hovers)
@@ -2233,18 +2235,20 @@ LRESULT CALLBACK procedure(HWND w, UINT message, WPARAM a, LPARAM b) {
     invalidate();
     return 0;
   case WM_MOUSEWHEEL: {
-    int direction = GET_WHEEL_DELTA_WPARAM(a) > 0 ? -1 : 1;
+    const double steps = -static_cast<double>(GET_WHEEL_DELTA_WPARAM(a)) / WHEEL_DELTA;
+    const double now = clockNow();
     if (dialog.open) {
-      dialog.scroll = std::clamp(dialog.scroll + direction * 40, 0.f, dialog.maximum);
+      dialog.scroll.target(std::clamp(dialog.scroll.to + steps * 40, 0.0,
+                                     static_cast<double>(dialog.maximum)), now);
+      animate();
       invalidate();
       return 0;
     }
     if (page == 1 && filtered.size() > 6) {
-      if (direction < 0)
-        featureOffset = featureOffset ? featureOffset - 1 : 0;
-      else
-        featureOffset = std::min(featureOffset + 1, filtered.size() - 6);
-      listPosition.target(static_cast<double>(featureOffset) * 76, clockNow(), 190);
+      double next = std::clamp(listPosition.to + steps * 76, 0.0,
+                              static_cast<double>(filtered.size() - 6) * 76);
+      featureOffset = static_cast<size_t>(std::ceil(next / 76));
+      listPosition.target(next, now);
       animate();
     }
     if (page == 2 && focusTab) {
@@ -2253,11 +2257,10 @@ LRESULT CALLBACK procedure(HWND w, UINT message, WPARAM a, LPARAM b) {
                                      : inventory.apps.size();
       auto &offset = focusTab == 1 ? processOffset : focusTab == 2 ? startupOffset : bloatOffset;
       if (count > 5) {
-        if (direction < 0)
-          offset = offset ? offset - 1 : 0;
-        else
-          offset = std::min(offset + 1, count - 5);
-        focusPosition.target(static_cast<double>(offset) * 59, clockNow(), 190);
+        double next = std::clamp(focusPosition.to + steps * 59, 0.0,
+                                static_cast<double>(count - 5) * 59);
+        offset = static_cast<size_t>(std::ceil(next / 59));
+        focusPosition.target(next, now);
         animate();
       }
     }
