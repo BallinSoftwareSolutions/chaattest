@@ -2,6 +2,12 @@
 
 The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10; Wine outcomes do not establish native Windows behavior or gaming performance.
 
+## Downward-scroll rendering follow-up
+
+- Animation timestamps use QueryPerformanceCounter rather than the coarse GetTickCount64 clock. The repaint timer requests 8 ms intervals; a balanced timeBeginPeriod/timeEndPeriod request exists only while the UI animation timer is running and is also released on destruction. This is UI pacing, not a persisted system/game timer tweak. Actual frame rate depends on Windows and the display.
+- DirectWrite text disables pixel snapping so text and row backgrounds move together at fractional coordinates.
+- The GUI smoke test sends downward WM_MOUSEWHEEL events through the real window procedure and checks intermediate movement plus fractional follow-up input. Wine validates this route, not native Windows perceived smoothness.
+
 ## Scroll polish after 0.5
 
 - Critically damped scrolling keeps position and forward velocity continuous across wheel bursts, stops at bounds and responds immediately to reversals. Fractional wheel deltas are preserved. Dialog text now uses the same animation.

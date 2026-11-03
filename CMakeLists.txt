@@ -11,7 +11,7 @@ target_compile_definitions(MaxifyingEngine PUBLIC UNICODE _UNICODE WIN32_LEAN_AN
 target_link_libraries(MaxifyingEngine PUBLIC advapi32 powrprof ole32 user32 psapi)
 add_executable(Maxifying WIN32 src/main.cpp src/ui.cpp src/bloat.cpp src/resources.rc)
 target_include_directories(Maxifying PRIVATE src)
-target_link_libraries(Maxifying PRIVATE MaxifyingEngine shell32 gdi32 comdlg32 dwmapi iphlpapi ws2_32 d2d1 dwrite uuid)
+target_link_libraries(Maxifying PRIVATE MaxifyingEngine shell32 gdi32 comdlg32 dwmapi iphlpapi ws2_32 d2d1 dwrite uuid winmm)
 if(MINGW)
   target_link_options(Maxifying PRIVATE -municode -static)
 endif()

@@ -22,13 +22,21 @@
 #include <sstream>
 #include <tlhelp32.h>
 #include <windowsx.h>
+#include <mmsystem.h>
 
 namespace {
 HWND window = nullptr;
 ui::Canvas canvas;
 float scale = 1;
 double clockNow() {
-  return static_cast<double>(GetTickCount64());
+  static const double frequency = [] {
+    LARGE_INTEGER value;
+    QueryPerformanceFrequency(&value);
+    return static_cast<double>(value.QuadPart);
+  }();
+  LARGE_INTEGER value;
+  QueryPerformanceCounter(&value);
+  return static_cast<double>(value.QuadPart) * 1000.0 / frequency;
 }
 int pixel(float n) {
   return static_cast<int>(n * scale + .5f);
@@ -50,6 +58,7 @@ size_t backups = 0;
 unsigned processCount = 0, threadCount = 0, ramLoad = 0;
 unsigned long long totalRam = 0;
 bool timerRunning = false, closeRequested = false;
+bool preciseTimer = false;
 std::vector<size_t> filtered;
 struct State {
   bool active = false, backup = false, available = false;
@@ -121,8 +130,12 @@ void invalidate() {
 }
 void animate() {
   if (window && !timerRunning) {
-    SetTimer(window, 2, 16, nullptr);
-    timerRunning = true;
+    preciseTimer = timeBeginPeriod(1) == TIMERR_NOERROR;
+    timerRunning = SetTimer(window, 2, 8, nullptr) != 0;
+    if (!timerRunning && preciseTimer) {
+      timeEndPeriod(1);
+      preciseTimer = false;
+    }
   }
 }
 std::wstring lower(std::wstring value) {
@@ -2029,7 +2042,26 @@ void smokeTick() {
     paint();
     if (canvas.surfaceAllocations() != allocations)
       smokeFailed = true;
+    // Exercise downward scrolling through the actual window-message route.
+    navigate(1);
+    search.clear();
+    category = 0;
+    filterFeatures();
+    SendMessageW(window, WM_MOUSEWHEEL, MAKEWPARAM(0, static_cast<WORD>(-WHEEL_DELTA)), 0);
+    const double wheelStart = clockNow();
+    const double scrollTarget = listPosition.to;
+    Sleep(24);
+    paint();
+    const double duringScroll = listPosition.value(clockNow());
+    bool wheelWorks = scrollTarget == 76 && duringScroll > 0 && duringScroll < scrollTarget;
+    SendMessageW(window, WM_MOUSEWHEEL, MAKEWPARAM(0, static_cast<WORD>(-WHEEL_DELTA / 4)), 0);
+    wheelWorks = wheelWorks && listPosition.to == 95 && clockNow() > wheelStart;
+    if (!wheelWorks)
+      smokeFailed = true;
+    navigate(0);
     std::ofstream report("maxifying-ui-test.txt");
+    report << (wheelWorks ? "PASS" : "FAIL")
+           << ": downward WM_MOUSEWHEEL moves rendered list; fractional burst retained\n";
     report << (focusReturned && safeTab ? "PASS" : "FAIL")
            << ": modal cancellation restores text selection; Tab skips window chrome\n";
     report << "Children=" << children << " surfaces=" << allocations << " -> "
@@ -2300,6 +2332,10 @@ LRESULT CALLBACK procedure(HWND w, UINT message, WPARAM a, LPARAM b) {
       if (!moving()) {
         KillTimer(w, 2);
         timerRunning = false;
+        if (preciseTimer) {
+          timeEndPeriod(1);
+          preciseTimer = false;
+        }
       }
       return 0;
     }
@@ -2325,6 +2361,10 @@ LRESULT CALLBACK procedure(HWND w, UINT message, WPARAM a, LPARAM b) {
   case WM_DESTROY:
     KillTimer(w, 1);
     KillTimer(w, 2);
+    if (preciseTimer) {
+      timeEndPeriod(1);
+      preciseTimer = false;
+    }
     closeProcessHandles();
     for (auto &p : priorities)
       CloseHandle(p.handle);

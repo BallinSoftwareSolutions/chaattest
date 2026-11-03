@@ -73,7 +73,8 @@ void Painter::text(const std::wstring &value, Rect r, float size, unsigned c, bo
   }
   brush->SetColor(color(c, opacity));
   target->DrawText(value.c_str(), static_cast<UINT32>(value.size()), format, r.native(), brush,
-                   D2D1_DRAW_TEXT_OPTIONS_CLIP);
+                   static_cast<D2D1_DRAW_TEXT_OPTIONS>(D2D1_DRAW_TEXT_OPTIONS_CLIP |
+                                                       D2D1_DRAW_TEXT_OPTIONS_NO_SNAP));
 }
 void Painter::line(float x, float y, float xx, float yy, unsigned c, float thickness,
                    float opacity) {
