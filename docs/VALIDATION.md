@@ -2,6 +2,10 @@
 
 The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10; Wine outcomes do not establish native Windows behavior or gaming performance.
 
+## Language control placement
+
+- The current-language button now sits at the top right beside the window controls. The footer is reserved for status. Ctrl+K still opens settings search.
+
 ## Added in 0.6
 
 - 326 unique Danish/English/Swedish catalog entries, including every feature title, description, scope and detailed warning. `assets/translations.json` is the editable source; `scripts/generate-translations.py` generates the compiled catalog. Unknown external strings, user paths and historical activity are preserved.

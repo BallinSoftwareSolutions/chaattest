@@ -6,7 +6,7 @@ Hvis download ikke starter: [åbn filen på GitHub](https://github.com/BallinSof
 
 ## Nyt i 0.6
 
-- **Dansk, English og Svenska:** åbn sprogknappen nederst til højre. Navigation, featureforklaringer, dialoger og advarsler skifter uden genstart. Valget gemmes under din Windows-bruger. Egne filnavne, programnavne, Windows-fejl og tidligere historik beholdes som de er.
+- **Dansk, English og Svenska:** åbn sprogknappen øverst til højre. Navigation, featureforklaringer, dialoger og advarsler skifter uden genstart. Valget gemmes under din Windows-bruger. Egne filnavne, programnavne, Windows-fejl og tidligere historik beholdes som de er.
 - **Scroll-rendering:** tekstlayout og målinger genbruges i en begrænset cache. Scroll springer den ekstra sidekomposition over, og opdateringsintervallet følger skærmens rapporterede Hz. Nye hjulinput reagerer hurtigere, og hardwareinspektion køres ikke længere hvert andet sekund. Den faktiske oplevelse skal stadig vurderes på Windows 11 og din skærm.
 - **Nyt ikon:** et symbol i sølv og blå på mørk baggrund erstatter det grønne M i både programfil, proceslinje og appens header.
 

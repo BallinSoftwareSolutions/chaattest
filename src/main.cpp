@@ -1147,7 +1147,9 @@ void drawFrame(ui::Painter &p) {
     p.text(tr(pages[i]), {r.x + 10, r.y + 8, r.w - 20, 22}, 13,
            page == static_cast<int>(i) ? ui::white : ui::muted, true, DWRITE_TEXT_ALIGNMENT_CENTER);
   }
-  button(p, 310, {986, 29, 92, 32}, L"Ctrl K");
+  button(p, 311, {986, 29, 92, 32},
+         l10n::selected == l10n::Language::Danish ? L"Dansk" :
+         l10n::selected == l10n::Language::Swedish ? L"Svenska" : L"English");
   hit(1, {1100, 26, 32, 35});
   hit(2, {1142, 26, 32, 35});
   p.round({1100, 26, 32, 35}, ui::white, 8, hover(1) * .06f);
@@ -1163,12 +1165,8 @@ void drawFrame(ui::Painter &p) {
                                     : ui::muted;
   float revealed = static_cast<float>(notice.value(clockNow()));
   p.circle(48, 810, 3, tone, revealed);
-  p.text(tr(status), {62, 801 + 3 * (1 - revealed), 790, 24}, 12, tone, false,
+  p.text(tr(status), {62, 801 + 3 * (1 - revealed), 930, 24}, 12, tone, false,
          DWRITE_TEXT_ALIGNMENT_LEADING, revealed);
-  button(p, 311, {870, 798, 126, 27},
-         l10n::selected == l10n::Language::Danish    ? L"Sprog · DA"
-         : l10n::selected == l10n::Language::Swedish ? L"Språk · SV"
-                                                     : L"Language");
   p.text(L"MAXIFYING / 0.6", {1020, 802, 152, 22}, 11, ui::muted, true,
          DWRITE_TEXT_ALIGNMENT_TRAILING);
   if (keyboardMode && !dialog.open) {

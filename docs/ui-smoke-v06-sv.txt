@@ -1,5 +1,5 @@
 PASS: language picker keyboard selection persists all three preferences; original restored
-PASS: scroll frames build 0 text layouts after warmup; no transition composition; cached=262; mean paint=20.0096ms (Wine)
+PASS: scroll frames build 0 text layouts after warmup; no transition composition; cached=253; mean paint=19.7729ms (Wine)
 PASS: downward WM_MOUSEWHEEL moves rendered list; fractional burst retained
 PASS: modal cancellation restores text selection; Tab skips window chrome
 Children=0 surfaces=3 -> 3 caret=0/9 unicode=1
