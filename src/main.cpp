@@ -2,6 +2,7 @@
 #include <ws2tcpip.h>
 #include "engine.h"
 #include "motion.h"
+#include "localization.h"
 #include "ui.h"
 #include "ui_text.h"
 #include "bloat.h"
@@ -25,6 +26,9 @@
 #include <mmsystem.h>
 
 namespace {
+std::wstring tr(const std::wstring &source) {
+  return l10n::text(source);
+}
 HWND window = nullptr;
 ui::Canvas canvas;
 float scale = 1;
@@ -83,7 +87,7 @@ std::wstring jobSuccess;
 int jobFeature = -1;
 bool refreshFocusAfterJob = false;
 struct Dialog {
-  bool open = false, information = false, danger = false;
+  bool open = false, information = false, danger = false, languagePicker = false;
   std::wstring title, body, primary = L"Anvend", eyebrow = L"DU HAR KONTROLLEN";
   std::function<void()> accept;
   motion::Tween opacity;
@@ -128,10 +132,21 @@ int smokeStep = 0;
 void invalidate() {
   InvalidateRect(window, nullptr, FALSE);
 }
+UINT animationInterval() {
+  MONITORINFOEXW monitor{};
+  monitor.cbSize = sizeof monitor;
+  DEVMODEW mode{};
+  mode.dmSize = sizeof mode;
+  if (GetMonitorInfoW(MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST), &monitor) &&
+      EnumDisplaySettingsW(monitor.szDevice, ENUM_CURRENT_SETTINGS, &mode) &&
+      mode.dmDisplayFrequency >= 30 && mode.dmDisplayFrequency <= 360)
+    return std::max<UINT>(4, 1000 / mode.dmDisplayFrequency);
+  return 8;
+}
 void animate() {
   if (window && !timerRunning) {
     preciseTimer = timeBeginPeriod(1) == TIMERR_NOERROR;
-    timerRunning = SetTimer(window, 2, 8, nullptr) != 0;
+    timerRunning = SetTimer(window, 2, animationInterval(), nullptr) != 0;
     if (!timerRunning && preciseTimer) {
       timeEndPeriod(1);
       preciseTimer = false;
@@ -161,7 +176,7 @@ void refreshStates() {
     auto &s = states[i];
     const auto &f = tune::features()[i];
     if ((f.kind == tune::Kind::Gpu || f.kind == tune::Kind::Fullscreen) && game.empty()) {
-      s.error = L"Vælg spillets .exe først";
+      s.error = tr(L"Vælg spillets .exe først");
       continue;
     }
     try {
@@ -187,8 +202,9 @@ void refreshStates() {
   } catch (...) {
   }
 }
-void refreshHardware() {
-  hardware = tune::hardwareSummary();
+void refreshHardware(bool inspectHardware = true) {
+  if (inspectHardware)
+    hardware = tune::hardwareSummary();
   PERFORMANCE_INFORMATION info{};
   info.cb = sizeof info;
   if (GetPerformanceInfo(&info, sizeof info)) {
@@ -209,7 +225,7 @@ void filterFeatures() {
     if (category && f.category != categories[static_cast<size_t>(category)])
       continue;
     if (!search.empty() &&
-        lower(f.title + L" " + f.description + L" " + f.category).find(lower(search)) ==
+        lower(tr(f.title) + L" " + tr(f.description) + L" " + tr(f.category)).find(lower(search)) ==
             std::wstring::npos)
       continue;
     filtered.push_back(i);
@@ -224,6 +240,7 @@ void filterFeatures() {
 std::wstring &editValue();
 void showDialog(const std::wstring &title, const std::wstring &body, const std::wstring &primary,
                 std::function<void()> accept = {}, bool danger = false, bool information = false) {
+  dialog.languagePicker = false;
   if (!dialog.open) {
     dialog.previousFocus = keyboardFocus;
     dialog.previousInput = inputFocus;
@@ -265,11 +282,10 @@ void dismissDialog(bool accept) {
     callback();
 }
 void errorDialog(const std::wstring &message) {
-  showDialog(
-      L"Ændringen blev ikke gennemført",
-      message +
-          L"\n\nEventuelle originale backups er stadig gemt. Du kan se status under Gendannelse.",
-      L"Forstået", {}, true, true);
+  showDialog(tr(L"Ændringen blev ikke gennemført"),
+             message + tr(L"\n\nEventuelle originale backups er stadig gemt. Du kan se status "
+                          L"under Gendannelse."),
+             tr(L"Forstået"), {}, true, true);
 }
 void closeProcessHandles() {
   for (auto &p : processes)
@@ -359,11 +375,11 @@ void loadStartups() {
 void updateEco() {
   ecoAvailable = false;
   ecoForced = false;
-  ecoStatus = L"Vælg en app";
+  ecoStatus = tr(L"Vælg en app");
   if (processSelection < 0 || static_cast<size_t>(processSelection) >= processes.size())
     return;
   if (GetProcAddress(GetModuleHandleW(L"ntdll.dll"), "wine_get_version")) {
-    ecoStatus = L"EcoQoS kræver afprøvning på Windows 11";
+    ecoStatus = tr(L"EcoQoS kræver afprøvning på Windows 11");
     return;
   }
   auto &selected = processes[static_cast<size_t>(processSelection)];
@@ -371,15 +387,15 @@ void updateEco() {
   current.Version = PROCESS_POWER_THROTTLING_CURRENT_VERSION;
   if (WaitForSingleObject(selected.handle, 0) != WAIT_TIMEOUT ||
       !GetProcessInformation(selected.handle, ProcessPowerThrottling, &current, sizeof current)) {
-    ecoStatus = L"Windows tillader ikke EcoQoS på denne proces";
+    ecoStatus = tr(L"Windows tillader ikke EcoQoS på denne proces");
     return;
   }
   ecoAvailable = true;
   ecoForced = session_power::forcedOff({current.Version, current.ControlMask, current.StateMask});
-  ecoStatus = ecoForced ? L"EcoQoS: execution-speed throttling er tvunget fra"
+  ecoStatus = ecoForced ? tr(L"EcoQoS: execution-speed throttling er tvunget fra")
               : (current.StateMask & PROCESS_POWER_THROTTLING_EXECUTION_SPEED)
-                  ? L"EcoQoS: execution-speed throttling er aktiv"
-                  : L"EcoQoS: Windows-styret / ikke aktiv lige nu";
+                  ? tr(L"EcoQoS: execution-speed throttling er aktiv")
+                  : tr(L"EcoQoS: Windows-styret / ikke aktiv lige nu");
 }
 void restorePriorities() {
   std::vector<Priority> failed;
@@ -436,9 +452,10 @@ void disableEco() {
   updateEco();
   if (!ecoForced)
     throw std::runtime_error("Windows did not confirm the power change; session baseline retained");
-  tune::log(L"EcoQoS execution-speed throttling fra: " + selected.name);
+  tune::log(tr(L"EcoQoS execution-speed throttling fra: ") + selected.name);
   setStatus(
-      L"Proces-strømbegrænsning slået fra. Originaltilstanden gendannes ved normal applukning.", 2);
+      tr(L"Proces-strømbegrænsning slået fra. Originaltilstanden gendannes ved normal applukning."),
+      2);
 }
 void startInventory(bool force) {
   if (inventoryJob.valid() || (!force && inventoryLoaded))
@@ -479,10 +496,10 @@ void beginJob(std::function<std::wstring()> work, const std::wstring &success, i
     } catch (const std::exception &e) {
       return tune::errorText(e);
     } catch (...) {
-      return std::wstring(L"Ukendt fejl. Backups bevares.");
+      return std::wstring(tr(L"Ukendt fejl. Backups bevares."));
     }
   });
-  setStatus(L"Arbejder. Du kan fortsat navigere i appen.", 1);
+  setStatus(tr(L"Arbejder. Du kan fortsat navigere i appen."), 1);
   animate();
 }
 void finishJob() {
@@ -506,8 +523,8 @@ void finishJob() {
       PostMessageW(window, WM_CLOSE, 0, 0);
   } else {
     closeRequested = false;
-    tune::log(L"Fejl: " + error);
-    setStatus(L"Ændringen blev ikke gennemført. Se oplysningerne.", 3);
+    tune::log(tr(L"Fejl: ") + error);
+    setStatus(tr(L"Ændringen blev ikke gennemført. Se oplysningerne."), 3);
     errorDialog(error);
   }
 }
@@ -551,21 +568,21 @@ void startProfile(int kind) {
       {L"EdgeBackground", L"EdgeStartupBoost", L"ChromeBackground"},
       {L"Transparency", L"WindowAnimation", L"MenuAnimation", L"TooltipAnimation",
        L"ClientAnimation"}};
-  const std::vector<std::wstring> names = {L"Gamingprofil", L"Inputprofil", L"Fokusprofil",
-                                           L"Minimal desktop"};
+  const std::vector<std::wstring> names = {tr(L"Gamingprofil"), tr(L"Inputprofil"),
+                                           tr(L"Fokusprofil"), tr(L"Minimal desktop")};
   auto selected = keys[static_cast<size_t>(kind)];
-  std::wstring body = L"Disse indstillinger tilpasses, og deres originale værdier gemmes:\n\n";
+  std::wstring body = tr(L"Disse indstillinger tilpasses, og deres originale værdier gemmes:\n\n");
   for (const auto &id : selected)
     for (const auto &f : tune::features())
       if (f.id == id)
-        body += L"• " + f.title + L"\n";
-  body += kind == 2 ? L"\nGenstart browserne. Baggrundsudvidelser og notifikationer kan stoppe. "
-                      L"Åbne apps og Windows-tjenester lukkes ikke."
-          : kind == 1 ? L"\nÆndrer Windows-museadfærd og tilgængelighedsgenveje. Raw-input-spil "
-                        L"kan ignorere museindstillingerne."
-                      : L"\nEffekten afhænger af spil, hardware og dine præferencer. Ingen "
-                        L"garanteret FPS-forbedring.";
-  showDialog(names[static_cast<size_t>(kind)], body, L"Anvend profil", [selected] {
+        body += L"• " + tr(f.title) + L"\n";
+  body += kind == 2 ? tr(L"\nGenstart browserne. Baggrundsudvidelser og notifikationer kan stoppe. "
+                         L"Åbne apps og Windows-tjenester lukkes ikke.")
+          : kind == 1 ? tr(L"\nÆndrer Windows-museadfærd og tilgængelighedsgenveje. Raw-input-spil "
+                           L"kan ignorere museindstillingerne.")
+                      : tr(L"\nEffekten afhænger af spil, hardware og dine præferencer. Ingen "
+                           L"garanteret FPS-forbedring.");
+  showDialog(names[static_cast<size_t>(kind)], body, tr(L"Anvend profil"), [selected] {
     auto chosen = game;
     beginJob(
         [selected, chosen] {
@@ -576,12 +593,12 @@ void startProfile(int kind) {
                 try {
                   tune::apply(f, chosen);
                 } catch (const std::exception &e) {
-                  errors += f.title + L": " + tune::errorText(e) + L"\n";
+                  errors += tr(f.title) + L": " + tune::errorText(e) + L"\n";
                 }
               }
           return errors;
         },
-        L"Profil anvendt. Originale indstillinger kan gendannes.");
+        tr(L"Profil anvendt. Originale indstillinger kan gendannes."));
   });
 }
 void changeFeature(size_t index, bool restoring) {
@@ -598,7 +615,8 @@ void changeFeature(size_t index, bool restoring) {
             tune::apply(feature, chosen);
           return std::wstring{};
         },
-        (restoring ? L"Gendannet: " : L"Anvendt: ") + feature.title + L". " + feature.scope,
+        (restoring ? tr(L"Gendannet: ") : tr(L"Anvendt: ")) + tr(feature.title) + L". " +
+            tr(feature.scope),
         static_cast<int>(index));
   };
   bool confirm =
@@ -606,8 +624,9 @@ void changeFeature(size_t index, bool restoring) {
                      feature.spi == SPI_GETFILTERKEYS || feature.spi == SPI_GETSTICKYKEYS ||
                      feature.spi == SPI_GETTOGGLEKEYS || feature.spi == SPI_GETMOUSESPEED);
   if (confirm)
-    showDialog(feature.title, feature.details + L"\n\nOriginalværdien gemmes før ændringen.",
-               L"Anvend ændring", action, feature.kind == tune::Kind::Fullscreen);
+    showDialog(tr(feature.title),
+               tr(feature.details) + tr(L"\n\nOriginalværdien gemmes før ændringen."),
+               tr(L"Anvend ændring"), action, feature.kind == tune::Kind::Fullscreen);
   else
     action();
 }
@@ -637,7 +656,10 @@ void button(ui::Painter &p, int id, ui::Rect r, const std::wstring &label, bool 
   p.round(surface, ui::mix(color, 0xffffff, h * .07), 10, enabled ? 1 : .38f);
   if (!primary)
     p.border(surface, ui::mix(ui::line, ui::muted, h * .22), 10, enabled ? 1 : .45f);
-  p.text(label, {surface.x + 12, surface.y + (surface.h - 20) / 2, surface.w - 24, 24}, 14,
+  float labelSize = 14;
+  while (labelSize > 10 && p.textWidth(label, labelSize) * 1.1f > surface.w - 24)
+    labelSize -= .5f;
+  p.text(label, {surface.x + 12, surface.y + (surface.h - 20) / 2, surface.w - 24, 24}, labelSize,
          primary   ? ui::background
          : enabled ? ui::white
                    : ui::muted,
@@ -715,36 +737,37 @@ void featureRow(ui::Painter &p, size_t index, float y, float width = 754) {
     p.round({44, y + 18, 3, 32}, ui::purple, 2);
   p.circle(72, y + 33, 13, s.active ? ui::lime : ui::muted, .08f);
   p.circle(72, y + 33, 3, s.active ? ui::lime : ui::muted);
-  p.text(f.title, {96, y + 12, width - 192, 23}, 16, ui::white, true);
-  p.text(f.scope, {96, y + 39, width - 192, 18}, 11, ui::muted);
+  p.text(tr(f.title), {96, y + 12, width - 192, 23}, 16, ui::white, true);
+  p.text(tr(f.scope), {96, y + 39, width - 192, 18}, 11, ui::muted);
   switchControl(p, static_cast<int>(index), {44 + width - 76, y + 21, 48, 26});
 }
 void drawDashboard(ui::Painter &p) {
-  p.text(L"D I T   P E R F O R M A N C E - W O R K S P A C E", {44, 134, 710, 22}, 11, ui::lime,
+  p.text(tr(L"D I T   P E R F O R M A N C E - W O R K S P A C E"), {44, 134, 710, 22}, 11, ui::lime,
          true);
-  p.text(L"Mindre støj.\nMere spil.", {40, 177, 718, 143}, 56, ui::white, true);
-  p.text(
-      L"Tilpas Windows til din session. Vælg præcis, hvad der ændres — og behold en vej tilbage.",
-      {44, 324, 630, 55}, 17, ui::muted);
-  button(p, 423, {44, 395, 212, 46}, L"Klargør fokus", true, !job.valid());
-  p.text(L"3 baggrundsvalg · kan gendannes", {276, 410, 450, 28}, 12, ui::muted);
+  p.text(tr(L"Mindre støj.\nMere spil."), {40, 177, 718, 143}, 56, ui::white, true);
+  p.text(tr(L"Tilpas Windows til din session. Vælg præcis, hvad der ændres — og behold en vej "
+            L"tilbage."),
+         {44, 324, 630, 55}, 17, ui::muted);
+  button(p, 423, {44, 395, 212, 46}, tr(L"Klargør fokus"), true, !job.valid());
+  p.text(tr(L"3 baggrundsvalg · kan gendannes"), {276, 410, 450, 28}, 12, ui::muted);
   panel(p, {794, 132, 378, 302});
-  p.text(L"LIGE NU PÅ DIN PC", {820, 157, 240, 20}, 11, ui::muted, true);
+  p.text(tr(L"LIGE NU PÅ DIN PC"), {820, 157, 240, 20}, 11, ui::muted, true);
   p.circle(1139, 166, 3, ui::lime);
   p.text(processCount ? std::to_wstring(processCount) : L"—", {817, 192, 310, 105}, 78, ui::lime,
          true);
-  p.text(L"kørende processer", {823, 295, 300, 25}, 15, ui::white);
+  p.text(tr(L"kørende processer"), {823, 295, 300, 25}, 15, ui::white);
   p.line(821, 340, 1145, 340, ui::line);
   p.text(std::to_wstring(ramLoad) + L"%", {822, 358, 150, 36}, 25, ui::white, true);
   p.text(std::to_wstring(threadCount), {998, 358, 148, 36}, 25, ui::white, true);
-  p.text(L"RAM i brug / " + std::to_wstring(totalRam) + L" GB", {823, 398, 160, 20}, 11, ui::muted);
-  p.text(L"aktive tråde", {1000, 398, 148, 20}, 11, ui::muted);
+  p.text(tr(L"RAM i brug / ") + std::to_wstring(totalRam) + L" GB", {823, 398, 160, 20}, 11,
+         ui::muted);
+  p.text(tr(L"aktive tråde"), {1000, 398, 148, 20}, 11, ui::muted);
   panel(p, {44, 480, 716, 266});
-  p.text(L"Vælg din retning", {66, 500, 640, 32}, 19, ui::white, true);
-  const wchar_t *names[] = {L"Gaming", L"Input", L"Fokus", L"Minimal desktop"};
-  const wchar_t *descriptions[] = {L"Game Mode og optagelse", L"Mus og tastaturgenveje",
-                                   L"Browser-baggrundsaktivitet",
-                                   L"Mindre bevægelse på skrivebordet"};
+  p.text(tr(L"Vælg din retning"), {66, 500, 640, 32}, 19, ui::white, true);
+  const std::wstring names[] = {tr(L"Gaming"), tr(L"Input"), tr(L"Fokus"), tr(L"Minimal desktop")};
+  const std::wstring descriptions[] = {tr(L"Game Mode og optagelse"), tr(L"Mus og tastaturgenveje"),
+                                       tr(L"Browser-baggrundsaktivitet"),
+                                       tr(L"Mindre bevægelse på skrivebordet")};
   const int ids[] = {420, 421, 423, 422};
   for (int i = 0; i < 4; ++i) {
     float y = 544 + i * 47.f;
@@ -759,27 +782,27 @@ void drawDashboard(ui::Painter &p) {
       p.line(112, y + 46, 724, y + 46, ui::line, 1, .55f);
   }
   panel(p, {794, 480, 378, 266});
-  p.text(L"Din maskine", {820, 502, 324, 32}, 19, ui::white, true);
+  p.text(tr(L"Din maskine"), {820, 502, 324, 32}, 19, ui::white, true);
   p.text(hardware, {820, 550, 326, 154}, 13, ui::muted);
-  pill(p, L"LOKALT / INGEN KONTO", {820, 710, 212, 22}, ui::purple);
+  pill(p, tr(L"LOKALT / INGEN KONTO"), {820, 710, 212, 22}, ui::purple);
 }
 void drawSettings(ui::Painter &p) {
-  sectionTitle(p, L"INDIVIDUEL KONTROL", L"Finjustér din PC.",
-               L"Vælg en indstilling for at se effekt, begrænsninger og gendannelse.");
+  sectionTitle(p, tr(L"INDIVIDUEL KONTROL"), tr(L"Finjustér din PC."),
+               tr(L"Vælg en indstilling for at se effekt, begrænsninger og gendannelse."));
   float x = 44;
   for (size_t i = 0; i < categories.size(); ++i) {
-    float w = i == 0 ? 61 : i == 2 ? 69 : i == 6 ? 98 : 91;
+    float w = std::max(61.f, p.textWidth(tr(categories[i]), 12) * 1.08f + 22);
     ui::Rect r{x, 244, w, 30};
     hit(400 + static_cast<int>(i), r);
     p.round(r, category == static_cast<int>(i) ? ui::white : ui::panel, 8,
             category == static_cast<int>(i) ? .095f : 1);
-    p.text(categories[i], {x + 9, 251, w - 18, 21}, 12,
+    p.text(tr(categories[i]), {x + 9, 251, w - 18, 21}, 12,
            category == static_cast<int>(i) ? ui::white : ui::muted, true);
     x += w + 6;
   }
-  input(p, 300, {824, 242, 348, 36}, search, L"Søg efter en indstilling…");
+  input(p, 300, {824, 242, 348, 36}, search, tr(L"Søg efter en indstilling…"));
   if (filtered.empty())
-    p.text(L"Ingen match. Prøv et andet søgeord.", {68, 342, 680, 90}, 20, ui::muted);
+    p.text(tr(L"Ingen match. Prøv et andet søgeord."), {68, 342, 680, 90}, 20, ui::muted);
   float position = static_cast<float>(listPosition.value(clockNow()));
   size_t first = static_cast<size_t>(std::max(0.f, std::floor(position / 76)));
   p.clip({44, 298, 754, 448});
@@ -791,11 +814,11 @@ void drawSettings(ui::Painter &p) {
   p.unclip();
   if (!filtered.empty())
     p.text(std::to_wstring(featureOffset + 1) + L"–" +
-               std::to_wstring(std::min(filtered.size(), featureOffset + 6)) + L" af " +
-               std::to_wstring(filtered.size()) + L" indstillinger",
+               std::to_wstring(std::min(filtered.size(), featureOffset + 6)) + tr(L" af ") +
+               std::to_wstring(filtered.size()) + tr(L" indstillinger"),
            {44, 761, 470, 22}, 11, ui::muted);
-  button(p, 601, {630, 752, 76, 31}, L"Forrige", false, featureOffset > 0);
-  button(p, 602, {714, 752, 84, 31}, L"Næste", false, featureOffset + 6 < filtered.size());
+  button(p, 601, {590, 752, 116, 31}, tr(L"Forrige"), false, featureOffset > 0);
+  button(p, 602, {714, 752, 84, 31}, tr(L"Næste"), false, featureOffset + 6 < filtered.size());
   panel(p, {824, 298, 348, 440});
   if (filtered.empty())
     return;
@@ -803,26 +826,28 @@ void drawSettings(ui::Painter &p) {
   auto &f = tune::features()[index];
   auto &s = states[index];
   float a = static_cast<float>(inspector.value(clockNow()));
-  p.text(f.category, {848, 321, 300, 22}, 11, ui::purple, true);
-  p.text(f.title, {848, 353, 300, 66}, 25, ui::white, true, DWRITE_TEXT_ALIGNMENT_LEADING, a);
-  p.text(f.description, {848, 429, 300, 92}, 15, ui::muted, false, DWRITE_TEXT_ALIGNMENT_LEADING,
-         a);
+  p.text(tr(f.category), {848, 321, 300, 22}, 11, ui::purple, true);
+  p.text(tr(f.title), {848, 353, 300, 66}, 25, ui::white, true, DWRITE_TEXT_ALIGNMENT_LEADING, a);
+  p.text(tr(f.description), {848, 429, 300, 92}, 15, ui::muted, false,
+         DWRITE_TEXT_ALIGNMENT_LEADING, a);
   pill(p,
-       s.available ? (s.active ? L"ØNSKET VÆRDI ER VALGT" : L"KLAR TIL TILPASNING")
-                   : L"IKKE TILGÆNGELIG",
+       s.available ? (s.active ? tr(L"ØNSKET VÆRDI ER VALGT") : tr(L"KLAR TIL TILPASNING"))
+                   : tr(L"IKKE TILGÆNGELIG"),
        {848, 532, 300, 25}, s.available ? (s.active ? ui::lime : ui::muted) : ui::red);
-  p.text(s.backup   ? L"Din originalværdi er gemt."
-         : s.active ? L"Værdien var allerede valgt i Windows."
-                    : L"Originalværdien gemmes før ændring.",
+  p.text(s.backup   ? tr(L"Din originalværdi er gemt.")
+         : s.active ? tr(L"Værdien var allerede valgt i Windows.")
+                    : tr(L"Originalværdien gemmes før ændring."),
          {848, 570, 300, 48}, 12, ui::muted);
   button(p, 3000 + selectedFeature * 3, {848, 635, 142, 38},
-         s.active ? L"Allerede valgt" : L"Anvend", true, !job.valid() && s.available && !s.active);
-  button(p, 3001 + selectedFeature * 3, {998, 635, 150, 38}, L"Gendan", false,
+         s.active ? tr(L"Allerede valgt") : tr(L"Anvend"), true,
+         !job.valid() && s.available && !s.active);
+  button(p, 3001 + selectedFeature * 3, {998, 635, 150, 38}, tr(L"Gendan"), false,
          !job.valid() && s.backup);
-  button(p, 3002 + selectedFeature * 3, {848, 688, 300, 31}, L"Læs hele forklaringen");
+  button(p, 3002 + selectedFeature * 3, {848, 688, 300, 31}, tr(L"Læs hele forklaringen"));
 }
 void focusTabs(ui::Painter &p) {
-  const wchar_t *names[] = {L"Spilprofil", L"Kørende apps", L"Opstart", L"Windows-apps"};
+  const std::wstring names[] = {tr(L"Spilprofil"), tr(L"Kørende apps"), tr(L"Opstart"),
+                                tr(L"Windows-apps")};
   for (int i = 0; i < 4; ++i) {
     ui::Rect r{44 + i * 156.f, 244, 148, 34};
     hit(450 + i, r);
@@ -834,18 +859,19 @@ void focusTabs(ui::Painter &p) {
 void drawBloat(ui::Painter &p) {
   panel(p, {44, 304, 754, 434});
   panel(p, {824, 304, 348, 434});
-  p.text(L"Valgfrie Windows-apps", {68, 327, 530, 30}, 21, ui::white, true);
-  button(p, 550, {654, 323, 120, 34}, inventoryJob.valid() ? L"Henter…" : L"Opdater", false,
+  p.text(tr(L"Valgfrie Windows-apps"), {68, 327, 530, 30}, 21, ui::white, true);
+  button(p, 550, {654, 323, 120, 34}, inventoryJob.valid() ? tr(L"Henter…") : tr(L"Opdater"), false,
          !job.valid() && !inventoryJob.valid());
   if (inventoryJob.valid())
-    p.text(L"Windows læser listen. Ingen apps ændres ved scanning.", {68, 400, 680, 100}, 18,
+    p.text(tr(L"Windows læser listen. Ingen apps ændres ved scanning."), {68, 400, 680, 100}, 18,
            ui::muted);
   else if (!inventory.error.empty())
-    p.text(inventory.error, {68, 400, 680, 200}, 15, ui::muted);
+    p.text(tr(inventory.error), {68, 400, 680, 200}, 15, ui::muted);
   else if (inventory.apps.empty())
-    p.text(L"Ingen af de ni kendte valgfrie apps blev fundet. Dette er ikke en komplet liste over "
-           L"alle installerede programmer.",
-           {68, 400, 680, 145}, 17, ui::muted);
+    p.text(
+        tr(L"Ingen af de ni kendte valgfrie apps blev fundet. Dette er ikke en komplet liste over "
+           L"alle installerede programmer."),
+        {68, 400, 680, 145}, 17, ui::muted);
   else {
     float position = static_cast<float>(focusPosition.value(clockNow()));
     size_t first = static_cast<size_t>(std::max(0.f, std::floor(position / 59)));
@@ -860,37 +886,38 @@ void drawBloat(ui::Painter &p) {
       p.round({60, y, 722, 53}, chosen ? 0x272d35 : ui::panel, 10);
       if (chosen)
         p.border({60, y, 722, 53}, ui::purple, 10, .45f);
-      p.text(app.title, {82, y + 6, 666, 24}, 15, ui::white, true);
-      p.text(app.installed ? L"Installeret for din bruger" : L"Fjernet · kan søges i Store",
+      p.text(tr(app.title), {82, y + 6, 666, 24}, 15, ui::white, true);
+      p.text(app.installed ? tr(L"Installeret for din bruger") : tr(L"Fjernet · kan søges i Store"),
              {82, y + 30, 666, 18}, 11, app.installed ? ui::muted : ui::lime);
     }
     hitClipping = false;
     p.unclip();
     if (inventory.apps.size() > 5) {
-      button(p, 701, {552, 691, 104, 31}, L"Forrige", false, bloatOffset > 0);
-      button(p, 702, {664, 691, 110, 31}, L"Næste", false, bloatOffset + 5 < inventory.apps.size());
+      button(p, 701, {552, 691, 104, 31}, tr(L"Forrige"), false, bloatOffset > 0);
+      button(p, 702, {664, 691, 110, 31}, tr(L"Næste"), false,
+             bloatOffset + 5 < inventory.apps.size());
     }
   }
   bool selected = bloatSelection >= 0 &&
                   static_cast<size_t>(bloatSelection) < inventory.apps.size() &&
                   inventory.error.empty();
-  p.text(L"Oprydning med omtanke", {848, 329, 300, 70}, 24, ui::white, true);
-  p.text(selected ? inventory.apps[static_cast<size_t>(bloatSelection)].impact
-                  : L"Kun udvalgte, valgfrie apps vises. Store, sikkerhed, frameworks og "
-                    L"gaming-tjenester fjernes ikke.",
+  p.text(tr(L"Oprydning med omtanke"), {848, 329, 300, 70}, 24, ui::white, true);
+  p.text(selected ? tr(inventory.apps[static_cast<size_t>(bloatSelection)].impact)
+                  : tr(L"Kun udvalgte, valgfrie apps vises. Store, sikkerhed, frameworks og "
+                       L"gaming-tjenester fjernes ikke."),
          {848, 414, 300, 96}, 14, ui::muted);
-  p.text(L"Afinstallation kan slette appdata. Gendan alle kan ikke genskabe apps. Mindre "
-         L"diskforbrug er ikke i sig selv lavere latency.",
+  p.text(tr(L"Afinstallation kan slette appdata. Gendan alle kan ikke genskabe apps. Mindre "
+            L"diskforbrug er ikke i sig selv lavere latency."),
          {848, 520, 300, 96}, 13, ui::red);
-  button(p, 551, {848, 634, 300, 40}, L"Afinstaller den valgte app", false,
+  button(p, 551, {848, 634, 300, 40}, tr(L"Afinstaller den valgte app"), false,
          selected && inventory.apps[static_cast<size_t>(std::max(0, bloatSelection))].installed &&
              !inventoryJob.valid() && !job.valid());
-  button(p, 552, {848, 687, 300, 30}, L"Find den valgte app i Store", false, selected);
+  button(p, 552, {848, 687, 300, 30}, tr(L"Find den valgte app i Store"), false, selected);
 }
 void drawFocus(ui::Painter &p) {
   sectionTitle(
-      p, L"DIN NÆSTE SESSION", L"Fokus, på dine præmisser.",
-      L"Et spil ad gangen. Et program ad gangen. Ingen blind lukning af Windows-processer.");
+      p, tr(L"DIN NÆSTE SESSION"), tr(L"Fokus, på dine præmisser."),
+      tr(L"Et spil ad gangen. Et program ad gangen. Ingen blind lukning af Windows-processer."));
   focusTabs(p);
   if (focusTab == 3) {
     drawBloat(p);
@@ -898,13 +925,13 @@ void drawFocus(ui::Painter &p) {
   }
   if (focusTab == 0) {
     panel(p, {44, 304, 754, 434});
-    p.text(L"Vælg spillets rigtige programfil", {68, 330, 706, 32}, 21, ui::white, true);
-    p.text(game.empty() ? L"Intet spil valgt endnu" : filename(game), {68, 376, 706, 44}, 15,
+    p.text(tr(L"Vælg spillets rigtige programfil"), {68, 330, 706, 32}, 21, ui::white, true);
+    p.text(game.empty() ? tr(L"Intet spil valgt endnu") : filename(game), {68, 376, 706, 44}, 15,
            game.empty() ? ui::muted : ui::lime);
-    button(p, 410, {68, 434, 244, 42}, game.empty() ? L"Vælg en .exe" : L"Vælg et andet spil", true,
-           !job.valid());
-    p.text(L"Ændringerne gælder kun denne fil. Genstart spillet bagefter.", {68, 499, 706, 44}, 14,
-           ui::muted);
+    button(p, 410, {68, 434, 244, 42},
+           game.empty() ? tr(L"Vælg en .exe") : tr(L"Vælg et andet spil"), true, !job.valid());
+    p.text(tr(L"Ændringerne gælder kun denne fil. Genstart spillet bagefter."), {68, 499, 706, 44},
+           14, ui::muted);
     int row = 0;
     for (size_t i = 0; i < tune::features().size(); ++i) {
       auto &f = tune::features()[i];
@@ -912,34 +939,34 @@ void drawFocus(ui::Painter &p) {
         continue;
       float y = 565 + row * 75.f;
       p.line(68, y - 12, 774, y - 12, ui::line);
-      p.text(f.title, {68, y, 550, 24}, 16, ui::white, true);
-      p.text(f.scope, {68, y + 28, 550, 22}, 12, ui::muted);
+      p.text(tr(f.title), {68, y, 550, 24}, 16, ui::white, true);
+      p.text(tr(f.scope), {68, y + 28, 550, 22}, 12, ui::muted);
       switchControl(p, static_cast<int>(i), {704, y + 8, 48, 26});
       hit(3002 + static_cast<int>(i) * 3, {68, y, 600, 55});
       ++row;
     }
     panel(p, {824, 304, 348, 434});
-    pill(p, L"MÅL FØR / EFTER", {848, 329, 298, 25}, ui::purple);
-    p.text(L"Præference.\nIkke et FPS-løfte.", {848, 380, 300, 92}, 29, ui::white, true);
-    p.text(L"GPU-valget er et ønske til Windows og driveren. Fullscreen-valget er en valgfri "
-           L"A/B-test og kan forringe ydelse, VRR eller Alt-Tab.",
+    pill(p, tr(L"MÅL FØR / EFTER"), {848, 329, 298, 25}, ui::purple);
+    p.text(tr(L"Præference.\nIkke et FPS-løfte."), {848, 380, 300, 92}, 29, ui::white, true);
+    p.text(tr(L"GPU-valget er et ønske til Windows og driveren. Fullscreen-valget er en valgfri "
+              L"A/B-test og kan forringe ydelse, VRR eller Alt-Tab."),
            {848, 497, 300, 132}, 15, ui::muted);
-    button(p, 431, {848, 663, 300, 42}, L"Åbn Windows-grafikindstillinger");
+    button(p, 431, {848, 663, 300, 42}, tr(L"Åbn Windows-grafikindstillinger"));
     return;
   }
   panel(p, {44, 304, 754, 434});
   panel(p, {824, 304, 348, 434});
   bool apps = focusTab == 1;
-  p.text(apps ? L"Apps med hovedvinduer" : L"Din brugers opstartsposter", {68, 327, 530, 30}, 21,
-         ui::white, true);
-  button(p, apps ? 504 : 543, {654, 323, 120, 34}, L"Opdater");
+  p.text(apps ? tr(L"Apps med hovedvinduer") : tr(L"Din brugers opstartsposter"),
+         {68, 327, 530, 30}, 21, ui::white, true);
+  button(p, apps ? 504 : 543, {654, 323, 120, 34}, tr(L"Opdater"));
   size_t count = apps ? processes.size() : startups.size(),
          offset = apps ? processOffset : startupOffset;
   float position = static_cast<float>(focusPosition.value(clockNow()));
   size_t first = static_cast<size_t>(std::max(0.f, std::floor(position / 59)));
   if (!count)
-    p.text(apps ? L"Ingen andre tilgængelige apps med hovedvinduer."
-                : L"Ingen registrerede opstartsposter.",
+    p.text(apps ? tr(L"Ingen andre tilgængelige apps med hovedvinduer.")
+                : tr(L"Ingen registrerede opstartsposter."),
            {68, 400, 680, 96}, 18, ui::muted);
   p.clip({60, 386, 722, 295});
   hitClipping = true;
@@ -954,8 +981,8 @@ void drawFocus(ui::Painter &p) {
       p.border({60, y, 722, 53}, ui::purple, 10, .45f);
     auto label = apps ? processes[i].name : startups[i].name;
     auto detail = apps                  ? L"PID " + std::to_wstring(processes[i].pid)
-                  : startups[i].present ? L"Registreret Run-post"
-                                        : L"Fjernet · original gemt";
+                  : startups[i].present ? tr(L"Registreret Run-post")
+                                        : tr(L"Fjernet · original gemt");
     p.circle(82, y + 26, 3, selected ? ui::lime : ui::muted);
     p.text(label, {100, y + 6, 650, 24}, 15, ui::white, true);
     p.text(detail, {100, y + 30, 650, 18}, 11, ui::muted);
@@ -963,88 +990,91 @@ void drawFocus(ui::Painter &p) {
   hitClipping = false;
   p.unclip();
   if (count > 5) {
-    button(p, 701, {552, 691, 104, 31}, L"Forrige", false, offset > 0);
-    button(p, 702, {664, 691, 110, 31}, L"Næste", false, offset + 5 < count);
+    button(p, 701, {552, 691, 104, 31}, tr(L"Forrige"), false, offset > 0);
+    button(p, 702, {664, 691, 110, 31}, tr(L"Næste"), false, offset + 5 < count);
   }
   if (apps) {
     bool selected =
         processSelection >= 0 && static_cast<size_t>(processSelection) < processes.size();
-    p.text(L"Sessionkontrol", {848, 329, 300, 30}, 21, ui::white, true);
-    p.text(selected ? processes[static_cast<size_t>(processSelection)].name : L"Vælg en app",
+    p.text(tr(L"Sessionkontrol"), {848, 329, 300, 30}, 21, ui::white, true);
+    p.text(selected ? processes[static_cast<size_t>(processSelection)].name : tr(L"Vælg en app"),
            {848, 381, 300, 55}, 22, selected ? ui::lime : ui::muted, true);
-    p.text(L"Prioritet og EcoQoS gælder kun denne proces og gendannes ved normal applukning. Ingen "
-           L"globale timer- eller driverændringer.",
-           {848, 449, 300, 82}, 14, ui::muted);
+    p.text(
+        tr(L"Prioritet og EcoQoS gælder kun denne proces og gendannes ved normal applukning. Ingen "
+           L"globale timer- eller driverændringer."),
+        {848, 449, 300, 82}, 14, ui::muted);
     p.text(ecoStatus, {848, 531, 300, 36}, 11, ecoAvailable ? ui::purple : ui::muted);
-    button(p, 502, {848, 575, 300, 36}, L"Brug Above Normal", true, selected && !job.valid());
+    button(p, 502, {848, 575, 300, 36}, tr(L"Brug Above Normal"), true, selected && !job.valid());
     button(p, 506, {848, 621, 300, 36},
-           ecoForced ? L"Strømbegrænsning er fjernet" : L"Fjern proces-strømbegrænsning", false,
-           selected && ecoAvailable && !ecoForced && !job.valid());
-    button(p, 505, {848, 667, 144, 36}, L"Bed appen lukke", false, selected && !job.valid());
-    button(p, 503, {1000, 667, 148, 36}, L"Gendan session", false,
+           ecoForced ? tr(L"Strømbegrænsning er fjernet") : tr(L"Fjern proces-strømbegrænsning"),
+           false, selected && ecoAvailable && !ecoForced && !job.valid());
+    button(p, 505, {848, 667, 144, 36}, tr(L"Bed appen lukke"), false, selected && !job.valid());
+    button(p, 503, {1000, 667, 148, 36}, tr(L"Gendan session"), false,
            (!priorities.empty() || !powerOverrides.empty()) && !job.valid());
 
   } else {
     bool selected =
         startupSelection >= 0 && static_cast<size_t>(startupSelection) < startups.size();
-    p.text(L"Start mindre automatisk", {848, 329, 300, 66}, 24, ui::white, true);
-    p.text(L"Fjerner kun den valgte Run-post. Programmet afinstalleres ikke. Windows-godkendelser, "
-           L"tjenester og planlagte opgaver er uden for denne liste.",
-           {848, 417, 300, 135}, 14, ui::muted);
-    button(p, 541, {848, 575, 300, 40}, L"Deaktivér opstart", true,
+    p.text(tr(L"Start mindre automatisk"), {848, 329, 300, 66}, 24, ui::white, true);
+    p.text(
+        tr(L"Fjerner kun den valgte Run-post. Programmet afinstalleres ikke. Windows-godkendelser, "
+           L"tjenester og planlagte opgaver er uden for denne liste."),
+        {848, 417, 300, 135}, 14, ui::muted);
+    button(p, 541, {848, 575, 300, 40}, tr(L"Deaktivér opstart"), true,
            selected && startups[static_cast<size_t>(std::max(0, startupSelection))].present &&
                !job.valid());
-    button(p, 542, {848, 626, 300, 40}, L"Gendan opstart", false,
+    button(p, 542, {848, 626, 300, 40}, tr(L"Gendan opstart"), false,
            selected && startups[static_cast<size_t>(std::max(0, startupSelection))].backup &&
                !job.valid());
-    button(p, 432, {848, 687, 300, 30}, L"Alle opstartsapps i Windows");
+    button(p, 432, {848, 687, 300, 30}, tr(L"Alle opstartsapps i Windows"));
   }
 }
 void drawNetwork(ui::Painter &p) {
   sectionTitle(
-      p, L"NETVÆRK / FEJLFINDING", L"Se forbindelsen, som den er.",
-      L"Ping måler ICMP round-trip-tid. Det er ikke en måling af input-latency i dit spil.");
+      p, tr(L"NETVÆRK / FEJLFINDING"), tr(L"Se forbindelsen, som den er."),
+      tr(L"Ping måler ICMP round-trip-tid. Det er ikke en måling af input-latency i dit spil."));
   panel(p, {44, 258, 720, 480});
-  pill(p, L"4 PAKKER / IPv4", {70, 284, 166, 25}, ui::purple);
-  p.text(L"Hvor vil du måle hen?", {70, 340, 650, 44}, 28, ui::white, true);
-  input(p, 510, {70, 410, 420, 46}, address, L"Fx 1.1.1.1");
-  button(p, 511, {506, 410, 232, 46}, pingJob.valid() ? L"Måler…" : L"Mål forbindelsen", true,
-         !pingJob.valid());
+  pill(p, tr(L"4 PAKKER / IPv4"), {70, 284, 166, 25}, ui::purple);
+  p.text(tr(L"Hvor vil du måle hen?"), {70, 340, 650, 44}, 28, ui::white, true);
+  input(p, 510, {70, 410, 420, 46}, address, tr(L"Fx 1.1.1.1"));
+  button(p, 511, {506, 410, 232, 46}, pingJob.valid() ? tr(L"Måler…") : tr(L"Mål forbindelsen"),
+         true, !pingJob.valid());
   p.line(70, 490, 738, 490, ui::line);
-  p.text(pingResult, {70, 522, 668, 170}, 16,
+  p.text(tr(pingResult), {70, 522, 668, 170}, 16,
          pingResult.rfind(L"0/4", 0) == 0 ? ui::red : ui::muted);
   panel(p, {790, 258, 382, 480});
-  p.text(L"Et rent DNS-opslag", {816, 291, 330, 76}, 29, ui::white, true);
-  p.text(L"Ryd cache ved navneopslagsproblemer. Det ændrer ikke din DNS-server og garanterer ikke "
-         L"bedre ping.",
-         {816, 392, 330, 100}, 16, ui::muted);
-  p.text(L"Cacheposter kan ikke gendannes. Windows opbygger automatisk en ny cache ved "
-         L"efterfølgende opslag.",
+  p.text(tr(L"Et rent DNS-opslag"), {816, 291, 330, 76}, 29, ui::white, true);
+  p.text(
+      tr(L"Ryd cache ved navneopslagsproblemer. Det ændrer ikke din DNS-server og garanterer ikke "
+         L"bedre ping."),
+      {816, 392, 330, 100}, 16, ui::muted);
+  p.text(tr(L"Cacheposter kan ikke gendannes. Windows opbygger automatisk en ny cache ved "
+            L"efterfølgende opslag."),
          {816, 518, 330, 80}, 13, ui::muted);
-  button(p, 512, {816, 628, 330, 42}, L"Ryd DNS-cache", false, !job.valid());
-  button(p, 513, {816, 684, 330, 30}, L"Åbn Windows-netværksindstillinger");
+  button(p, 512, {816, 628, 330, 42}, tr(L"Ryd DNS-cache"), false, !job.valid());
+  button(p, 513, {816, 684, 330, 30}, tr(L"Åbn Windows-netværksindstillinger"));
 }
 void drawRestore(ui::Painter &p) {
-  sectionTitle(
-      p, L"HISTORIK / GENDANNELSE", L"Du har altid overblikket.",
-      L"Originale indstillinger gemmes lokalt — også for tidligere valgte spil og opstartsposter.");
+  sectionTitle(p, tr(L"HISTORIK / GENDANNELSE"), tr(L"Du har altid overblikket."),
+               tr(L"Originale indstillinger gemmes lokalt — også for tidligere valgte spil og "
+                  L"opstartsposter."));
   panel(p, {44, 258, 724, 480});
-  p.text(L"Seneste aktivitet", {70, 285, 668, 32}, 22, ui::white, true);
+  p.text(tr(L"Seneste aktivitet"), {70, 285, 668, 32}, 22, ui::white, true);
   p.line(70, 337, 742, 337, ui::line);
   p.clip({70, 359, 668, 350});
-  p.text(activity.empty() ? L"Din historik begynder, når du foretager en ændring." : activity,
+  p.text(activity.empty() ? tr(L"Din historik begynder, når du foretager en ændring.") : activity,
          {70, 359, 668, 350}, 13, ui::muted);
   p.unclip();
   panel(p, {794, 258, 378, 480});
   p.text(std::to_wstring(backups), {818, 291, 328, 90}, 68, ui::purple, true);
-  p.text(L"gemte originale tilstande", {822, 390, 324, 30}, 16, ui::white, true);
-  p.text(L"Gendanner også gamle GameTune-backups og midlertidige sessionsvalg. Luk dine spil "
-         L"først.",
+  p.text(tr(L"gemte originale tilstande"), {822, 390, 324, 30}, 16, ui::white, true);
+  p.text(tr(L"Gendanner også gamle GameTune-backups og midlertidige sessionsvalg. Luk dine spil "
+            L"først."),
          {822, 454, 324, 104}, 15, ui::muted);
-  button(p, 520, {820, 580, 326, 44}, L"Gendan alle ændringer", true,
+  button(p, 520, {820, 580, 326, 44}, tr(L"Gendan alle ændringer"), true,
          !job.valid() && (backups > 0 || !priorities.empty() || !powerOverrides.empty()));
-  button(p, 521, {820, 637, 326, 40}, L"Eksportér rapport");
-  button(p, 522, {820, 692, 326, 28}, L"Opdater status", false, !job.valid());
+  button(p, 521, {820, 637, 326, 40}, tr(L"Eksportér rapport"));
+  button(p, 522, {820, 692, 326, 28}, tr(L"Opdater status"), false, !job.valid());
 }
 void drawContent(ui::Painter &p) {
   switch (page) {
@@ -1079,19 +1109,27 @@ void drawDialog(ui::Painter &p) {
   unsigned accent = dialog.danger ? ui::red : ui::lime;
   p.circle(366, y + 39, 12, accent, .10f);
   p.circle(366, y + 39, 3, accent);
-  p.text(dialog.information ? L"DETALJER / MAXIFYING" : L"BEKRÆFT ÆNDRING", {390, y + 31, 450, 20},
-         11, accent, true);
+  p.text(dialog.information ? tr(L"DETALJER / MAXIFYING") : tr(L"BEKRÆFT ÆNDRING"),
+         {390, y + 31, 450, 20}, 11, accent, true);
   p.text(dialog.title, {360, y + 79, 496, 80}, 29, ui::white, true);
   p.clip({360, y + 174, 496, 196});
-  p.text(dialog.body, {360, y + 174 - static_cast<float>(dialog.scroll.value(clockNow())), 496, 8000}, 15, ui::muted);
+  p.text(dialog.body,
+         {360, y + 174 - static_cast<float>(dialog.scroll.value(clockNow())), 496, 8000}, 15,
+         ui::muted);
   p.unclip();
   dialog.maximum = std::max(0.f, p.textHeight(dialog.body, 496, 15) - 196);
   if (dialog.maximum > 0)
-    p.text(L"Rul for at læse resten", {360, y + 376, 496, 20}, 11, ui::purple);
-  if (dialog.information)
+    p.text(tr(L"Rul for at læse resten"), {360, y + 376, 496, 20}, 11, ui::purple);
+  if (dialog.languagePicker) {
+    const std::wstring names[] = {L"Dansk", L"English", L"Svenska"};
+    for (int i = 0; i < 3; ++i)
+      button(p, 9100 + i, {360, y + 250 + i * 47.f, 496, 38}, names[i],
+             static_cast<int>(l10n::selected.load()) == i, dialog.open);
+    button(p, 9002, {360, y + 412, 496, 38}, tr(L"Annuller"), false, dialog.open);
+  } else if (dialog.information)
     button(p, 9001, {360, y + 412, 496, 38}, dialog.primary, true, dialog.open, dialog.danger);
   else {
-    button(p, 9002, {360, y + 412, 160, 38}, L"Annuller", false, dialog.open);
+    button(p, 9002, {360, y + 412, 160, 38}, tr(L"Annuller"), false, dialog.open);
     button(p, 9001, {532, y + 412, 324, 38}, dialog.primary, true, dialog.open, dialog.danger);
   }
   p.endOpacity();
@@ -1099,18 +1137,14 @@ void drawDialog(ui::Painter &p) {
 void drawFrame(ui::Painter &p) {
   p.rect({0, 0, ui::width, 98}, ui::background);
   p.line(44, 96, 1172, 96, ui::line, 1, .7f);
-  p.round({44, 29, 29, 29}, ui::lime, 8);
-  p.line(51, 50, 51, 37, ui::background, 2.3f);
-  p.line(51, 37, 58.5f, 46, ui::background, 2.3f);
-  p.line(58.5f, 46, 66, 37, ui::background, 2.3f);
-  p.line(66, 37, 66, 50, ui::background, 2.3f);
+  p.icon({42, 25, 36, 36});
   p.text(L"MAXIFYING", {87, 30, 210, 27}, 20, ui::white, true);
   float x = static_cast<float>(nav.value(clockNow()));
   p.round({x, 28, 118, 35}, ui::white, 10, .055f);
   for (size_t i = 0; i < pages.size(); ++i) {
     ui::Rect r{330 + static_cast<float>(i) * 126, 28, 118, 35};
     hit(100 + static_cast<int>(i), r);
-    p.text(pages[i], {r.x + 10, r.y + 8, r.w - 20, 22}, 13,
+    p.text(tr(pages[i]), {r.x + 10, r.y + 8, r.w - 20, 22}, 13,
            page == static_cast<int>(i) ? ui::white : ui::muted, true, DWRITE_TEXT_ALIGNMENT_CENTER);
   }
   button(p, 310, {986, 29, 92, 32}, L"Ctrl K");
@@ -1129,9 +1163,13 @@ void drawFrame(ui::Painter &p) {
                                     : ui::muted;
   float revealed = static_cast<float>(notice.value(clockNow()));
   p.circle(48, 810, 3, tone, revealed);
-  p.text(status, {62, 801 + 3 * (1 - revealed), 930, 24}, 12, tone, false,
+  p.text(tr(status), {62, 801 + 3 * (1 - revealed), 790, 24}, 12, tone, false,
          DWRITE_TEXT_ALIGNMENT_LEADING, revealed);
-  p.text(L"MAXIFYING / 0.5", {1020, 802, 152, 22}, 11, ui::muted, true,
+  button(p, 311, {870, 798, 126, 27},
+         l10n::selected == l10n::Language::Danish    ? L"Sprog · DA"
+         : l10n::selected == l10n::Language::Swedish ? L"Språk · SV"
+                                                     : L"Language");
+  p.text(L"MAXIFYING / 0.6", {1020, 802, 152, 22}, 11, ui::muted, true,
          DWRITE_TEXT_ALIGNMENT_TRAILING);
   if (keyboardMode && !dialog.open) {
     auto focus = std::find_if(hits.begin(), hits.end(),
@@ -1153,10 +1191,11 @@ std::wstring selectFile(bool save) {
                                     CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&dialogFile));
   if (FAILED(result))
     throw std::runtime_error("Windows file picker is unavailable");
-  const COMDLG_FILTERSPEC filter = save ? COMDLG_FILTERSPEC{L"Tekstfil", L"*.txt"}
-                                        : COMDLG_FILTERSPEC{L"Windows-program", L"*.exe"};
+  const std::wstring filterLabel = save ? tr(L"Tekstfil") : tr(L"Windows-program");
+  const COMDLG_FILTERSPEC filter{filterLabel.c_str(), save ? L"*.txt" : L"*.exe"};
   dialogFile->SetFileTypes(1, &filter);
-  dialogFile->SetTitle(save ? L"Eksportér Maxifying-rapport" : L"Vælg spillets rigtige .exe");
+  const auto title = save ? tr(L"Eksportér Maxifying-rapport") : tr(L"Vælg spillets rigtige .exe");
+  dialogFile->SetTitle(title.c_str());
   DWORD options = 0;
   dialogFile->GetOptions(&options);
   dialogFile->SetOptions(options | FOS_FORCEFILESYSTEM | FOS_PATHMUSTEXIST | FOS_NOCHANGEDIR |
@@ -1194,17 +1233,18 @@ void chooseGame() {
   game = selected;
   tune::rememberGame(game);
   refreshStates();
-  setStatus(L"Valgt spil: " + filename(game), 2);
+  setStatus(tr(L"Valgt spil: ") + filename(game), 2);
 }
 void exportReport() {
   auto path = selectFile(true);
   if (path.empty())
     return;
-  std::wstring report = L"Maxifying 0.5\r\n\r\n" + hardware + L"\r\n\r\n";
+  std::wstring report = L"Maxifying 0.6\r\n\r\n" + hardware + L"\r\n\r\n";
   for (size_t i = 0; i < states.size(); ++i)
-    report += tune::features()[i].title + L": " +
-              (states[i].available ? (states[i].active ? L"Ønsket værdi valgt" : L"Ikke tilpasset")
-                                   : states[i].error) +
+    report += tr(tune::features()[i].title) + L": " +
+              (states[i].available
+                   ? (states[i].active ? tr(L"Ønsket værdi valgt") : tr(L"Ikke tilpasset"))
+                   : states[i].error) +
               L"\r\n";
   report += L"\r\nAktivitet:\r\n" + activity;
   int bytes = WideCharToMultiByte(CP_UTF8, 0, report.data(), static_cast<int>(report.size()),
@@ -1222,7 +1262,8 @@ void exportReport() {
   CloseHandle(file);
   if (!ok)
     throw std::runtime_error("Report write failed");
-  setStatus(L"Rapport gemt. Den indeholder hardwareoplysninger og lokal aktivitetshistorik.", 2);
+  setStatus(tr(L"Rapport gemt. Den indeholder hardwareoplysninger og lokal aktivitetshistorik."),
+            2);
 }
 void openSettings(const wchar_t *uri) {
   if (reinterpret_cast<INT_PTR>(
@@ -1248,15 +1289,15 @@ void flushDns() {
   if (wait != WAIT_OBJECT_0 || code)
     throw std::runtime_error(
         "DNS flush did not complete; Windows may require administrator rights");
-  tune::log(L"DNS-cache ryddet");
+  tune::log(tr(L"DNS-cache ryddet"));
 }
 std::wstring ping(const std::wstring &ip) {
   IN_ADDR destination{};
   if (InetPtonW(AF_INET, ip.c_str(), &destination) != 1)
-    return L"Ugyldig IPv4-adresse.";
+    return tr(L"Ugyldig IPv4-adresse.");
   HANDLE handle = IcmpCreateFile();
   if (handle == INVALID_HANDLE_VALUE)
-    return L"ICMP er ikke tilgængeligt på denne maskine.";
+    return tr(L"ICMP er ikke tilgængeligt på denne maskine.");
   const char data[] = "Maxifying connection test";
   std::vector<BYTE> buffer(sizeof(ICMP_ECHO_REPLY) + sizeof data + 32);
   unsigned received = 0;
@@ -1277,12 +1318,12 @@ std::wstring ping(const std::wstring &ip) {
   }
   IcmpCloseHandle(handle);
   if (!received)
-    return L"0/4 svar. ICMP kan være blokeret; det beviser ikke, at internet eller "
-           L"spilforbindelsen er nede.";
-  return ip + L" · " + std::to_wstring(received) + L"/4 svar · " +
-         std::to_wstring((4 - received) * 25) + L"% pakketab\n\nMin / gennemsnit / maks\n" +
+    return tr(L"0/4 svar. ICMP kan være blokeret; det beviser ikke, at internet eller "
+              L"spilforbindelsen er nede.");
+  return ip + L" · " + std::to_wstring(received) + tr(L"/4 svar · ") +
+         std::to_wstring((4 - received) * 25) + tr(L"% pakketab\n\nMin / gennemsnit / maks\n") +
          std::to_wstring(minimum) + L" / " + std::to_wstring(total / received) + L" / " +
-         std::to_wstring(maximum) + L" ms\n\nSpillets egen server kan have en anden RTT.";
+         std::to_wstring(maximum) + tr(L" ms\n\nSpillets egen server kan have en anden RTT.");
 }
 void boostProcess() {
   if (processSelection < 0 || static_cast<size_t>(processSelection) >= processes.size())
@@ -1293,7 +1334,7 @@ void boostProcess() {
   for (auto &p : priorities)
     if (WaitForSingleObject(p.handle, 0) == WAIT_TIMEOUT &&
         GetProcessId(p.handle) == selected.pid) {
-      setStatus(L"Der er allerede gemt en prioritet for denne app.");
+      setStatus(tr(L"Der er allerede gemt en prioritet for denne app."));
       return;
     }
   DWORD original = GetPriorityClass(selected.handle);
@@ -1311,18 +1352,18 @@ void boostProcess() {
     throw std::runtime_error("Windows rejected the priority change");
   }
   priorities.push_back({duplicate, original});
-  tune::log(L"Midlertidig Above Normal: " + selected.name);
-  setStatus(L"Above Normal anvendt. Gendannes ved normal applukning eller manuelt.", 2);
+  tune::log(tr(L"Midlertidig Above Normal: ") + selected.name);
+  setStatus(tr(L"Above Normal anvendt. Gendannes ved normal applukning eller manuelt."), 2);
 }
 void requestAppClose() {
   if (processSelection < 0 || static_cast<size_t>(processSelection) >= processes.size())
     throw std::runtime_error("Select an application first");
   auto selected = processes[static_cast<size_t>(processSelection)];
   showDialog(
-      L"Luk " + selected.name + L"?",
-      L"Appen bliver bedt om at lukke normalt. Den kan spørge om at gemme arbejde eller blive i "
-      L"systembakken.\n\nIngen proces bliver tvangsafsluttet.",
-      L"Send lukkeanmodning",
+      tr(L"Luk ") + selected.name + L"?",
+      tr(L"Appen bliver bedt om at lukke normalt. Den kan spørge om at gemme arbejde eller blive i "
+         L"systembakken.\n\nIngen proces bliver tvangsafsluttet."),
+      tr(L"Send lukkeanmodning"),
       [selected] {
         if (WaitForSingleObject(selected.handle, 0) != WAIT_TIMEOUT)
           throw std::runtime_error("The selected app has already exited");
@@ -1346,11 +1387,42 @@ void requestAppClose() {
         if (!request.sent)
           throw std::runtime_error(
               "No closable main window was found. Use the app's tray menu or startup controls.");
-        setStatus(L"Lukkeanmodning sendt. Appen kan bede om at gemme eller blive i bakken.");
+        setStatus(tr(L"Lukkeanmodning sendt. Appen kan bede om at gemme eller blive i bakken."));
       },
       true);
 }
+void languageMenu() {
+  showDialog(tr(L"Vælg sprog"), tr(L"Skift sprog med det samme. Dit valg gemmes på denne PC."),
+             tr(L"Forstået"), {}, false, true);
+  dialog.languagePicker = true;
+  keyboardFocus = 9100 + static_cast<int>(l10n::selected.load());
+}
+void chooseLanguage(l10n::Language language) {
+  const DWORD value = static_cast<DWORD>(language);
+  if (RegSetKeyValueW(HKEY_CURRENT_USER, L"Software\\Maxifying\\UI", L"Language", REG_DWORD, &value,
+                      sizeof value) != ERROR_SUCCESS) {
+    errorDialog(tr(L"Kunne ikke gemme sprogvalget. Prøv igen."));
+    return;
+  }
+  l10n::selected = language;
+  updateEco();
+  refreshHardware();
+  dismissDialog(false);
+  filterFeatures();
+  featureOffset = 0;
+  listPosition.snap(0);
+  setStatus(tr(L"Klar til din næste session."));
+  invalidate();
+}
 void activate(int id) {
+  if (id == 311) {
+    languageMenu();
+    return;
+  }
+  if (id >= 9100 && id <= 9102) {
+    chooseLanguage(static_cast<l10n::Language>(id - 9100));
+    return;
+  }
   if (id == 9001) {
     if (dialog.open)
       dismissDialog(true);
@@ -1409,8 +1481,8 @@ void activate(int id) {
     size_t index = static_cast<size_t>((id - 3000) / 3);
     int action = (id - 3000) % 3;
     if (action == 2) {
-      showDialog(tune::features()[index].title, tune::features()[index].details, L"Forstået", {},
-                 false, true);
+      showDialog(tr(tune::features()[index].title), tr(tune::features()[index].details),
+                 tr(L"Forstået"), {}, false, true);
       return;
     }
     if (!job.valid())
@@ -1439,14 +1511,14 @@ void activate(int id) {
     return;
   }
   if (id == 601) {
-    featureOffset = featureOffset >= 6 ? featureOffset - 6 : 0;
+    featureOffset = motion::pageOffset(featureOffset, false, filtered.size(), 6);
     listPosition.target(static_cast<double>(featureOffset) * 76, clockNow(), 220);
     invalidate();
     animate();
     return;
   }
   if (id == 602) {
-    featureOffset += 6;
+    featureOffset = motion::pageOffset(featureOffset, true, filtered.size(), 6);
     listPosition.target(static_cast<double>(featureOffset) * 76, clockNow(), 220);
     invalidate();
     animate();
@@ -1454,10 +1526,10 @@ void activate(int id) {
   }
   if (id == 701 || id == 702) {
     auto &offset = focusTab == 1 ? processOffset : focusTab == 2 ? startupOffset : bloatOffset;
-    if (id == 701)
-      offset = offset >= 5 ? offset - 5 : 0;
-    else
-      offset += 5;
+    const size_t count = focusTab == 1   ? processes.size()
+                         : focusTab == 2 ? startups.size()
+                                         : inventory.apps.size();
+    offset = motion::pageOffset(offset, id == 702, count, 5);
     focusPosition.target(static_cast<double>(offset) * 59, clockNow(), 220);
     invalidate();
     animate();
@@ -1484,20 +1556,20 @@ void activate(int id) {
       return;
     IN_ADDR parsed{};
     if (InetPtonW(AF_INET, address.c_str(), &parsed) != 1) {
-      showDialog(L"Indtast en IPv4-adresse",
-                 L"Brug fire tal adskilt af punktummer. For eksempel 1.1.1.1 eller 8.8.8.8.",
-                 L"Forstået", {}, false, true);
+      showDialog(tr(L"Indtast en IPv4-adresse"),
+                 tr(L"Brug fire tal adskilt af punktummer. For eksempel 1.1.1.1 eller 8.8.8.8."),
+                 tr(L"Forstået"), {}, false, true);
       return;
     }
     auto ip = address;
-    pingResult = L"Sender fire pakker. Målingen vises her, når den er klar.";
+    pingResult = tr(L"Sender fire pakker. Målingen vises her, når den er klar.");
     pingJob = std::async(std::launch::async, [ip] { return ping(ip); });
     invalidate();
     animate();
     return;
   }
   if (job.valid()) {
-    setStatus(L"Den aktuelle ændring afsluttes først.", 1);
+    setStatus(tr(L"Den aktuelle ændring afsluttes først."), 1);
     return;
   }
   switch (id) {
@@ -1521,23 +1593,24 @@ void activate(int id) {
     break;
   case 503:
     restorePriorities();
-    setStatus(L"Sessionsvalg er gendannet.", 2);
+    setStatus(tr(L"Sessionsvalg er gendannet."), 2);
     break;
   case 504:
     loadProcesses();
-    setStatus(L"Listen over apps er opdateret.");
+    setStatus(tr(L"Listen over apps er opdateret."));
     break;
   case 505:
     requestAppClose();
     break;
   case 506:
-    showDialog(
-        L"Fjern strømbegrænsning fra denne proces?",
-        L"Slår execution-speed throttling (EcoQoS) fra for netop den valgte app. Andre strømflag "
-        L"bevares. Det kan øge strømforbruget.\n\nDet ændrer ikke globale timere, HPET, "
-        L"CPU-affinity eller drivere. En lavere latency er ikke garanteret. Tilstanden gendannes "
-        L"ved normal applukning; ved crash varer den indtil spillet afsluttes.",
-        L"Anvend for denne session", [] { disableEco(); });
+    showDialog(tr(L"Fjern strømbegrænsning fra denne proces?"),
+               tr(L"Slår execution-speed throttling (EcoQoS) fra for netop den valgte app. Andre "
+                  L"strømflag "
+                  L"bevares. Det kan øge strømforbruget.\n\nDet ændrer ikke globale timere, HPET, "
+                  L"CPU-affinity eller drivere. En lavere latency er ikke garanteret. Tilstanden "
+                  L"gendannes "
+                  L"ved normal applukning; ved crash varer den indtil spillet afsluttes."),
+               tr(L"Anvend for denne session"), [] { disableEco(); });
     break;
   case 550:
     startInventory(true);
@@ -1549,14 +1622,17 @@ void activate(int id) {
     if (!selected.installed)
       return;
     showDialog(
-        L"Afinstaller " + selected.title + L"?",
-        L"Dette kan ikke fortrydes af Maxifying. Gendan alle geninstallerer ikke apps. Appdata kan "
-        L"blive slettet.\n\n" +
-            selected.impact + L"\n\nPakke: " + selected.fullName +
-            L"\n\nKun denne brugers pakke fjernes. Windows Store, frameworks, Windows-sikkerhed og "
-            L"gaming-tjenester er ikke med i listen. Du kan normalt finde appen i Store igen, men "
-            L"lokale data genskabes ikke automatisk.",
-        L"Afinstaller kun for mig",
+        tr(L"Afinstaller ") + selected.title + L"?",
+        tr(L"Dette kan ikke fortrydes af Maxifying. Gendan alle geninstallerer ikke apps. Appdata "
+           L"kan "
+           L"blive slettet.\n\n") +
+            tr(selected.impact) + tr(L"\n\nPakke: ") + selected.fullName +
+            tr(L"\n\nKun denne brugers pakke fjernes. Windows Store, frameworks, Windows-sikkerhed "
+               L"og "
+               L"gaming-tjenester er ikke med i listen. Du kan normalt finde appen i Store igen, "
+               L"men "
+               L"lokale data genskabes ikke automatisk."),
+        tr(L"Afinstaller kun for mig"),
         [selected] {
           pendingRemoval = selected;
           reloadInventoryAfterJob = true;
@@ -1564,11 +1640,12 @@ void activate(int id) {
               [selected] {
                 auto error = bloat::remove(selected);
                 if (error.empty())
-                  tune::log(L"Afinstalleret valgfri Windows-app: " + selected.name +
-                            L". Geninstallation kræver Store.");
+                  tune::log(tr(L"Afinstalleret valgfri Windows-app: ") + selected.name +
+                            tr(L". Geninstallation kræver Store."));
                 return error;
               },
-              L"Windows-app afinstalleret for din bruger. Gendan alle geninstallerer den ikke.");
+              tr(L"Windows-app afinstalleret for din bruger. Gendan alle geninstallerer den "
+                 L"ikke."));
         },
         true);
     break;
@@ -1584,26 +1661,29 @@ void activate(int id) {
     break;
   }
   case 512:
-    showDialog(L"Ryd DNS-cache?",
-               L"Brug dette ved navneopslagsproblemer. Det ændrer ikke DNS-serveren og er ikke en "
-               L"garanteret ping-forbedring.\n\nCacheposter kan ikke gendannes. Windows opbygger "
-               L"automatisk en ny cache ved nye opslag.",
-               L"Ryd cache", [] {
-                 beginJob(
-                     [] {
-                       flushDns();
-                       return std::wstring{};
-                     },
-                     L"DNS-cache er ryddet.");
-               });
+    showDialog(
+        tr(L"Ryd DNS-cache?"),
+        tr(L"Brug dette ved navneopslagsproblemer. Det ændrer ikke DNS-serveren og er ikke en "
+           L"garanteret ping-forbedring.\n\nCacheposter kan ikke gendannes. Windows opbygger "
+           L"automatisk en ny cache ved nye opslag."),
+        tr(L"Ryd cache"), [] {
+          beginJob(
+              [] {
+                flushDns();
+                return std::wstring{};
+              },
+              tr(L"DNS-cache er ryddet."));
+        });
     break;
   case 520:
     showDialog(
-        L"Gendan dine originale indstillinger",
-        L"Gendanner alle gemte indstillinger, inklusive tidligere spilprofiler, opstartsposter og "
-        L"aktive procesprioriteter.\n\nLuk dine spil først. Ændringer i Windows kan kræve genstart "
-        L"af spil eller en ny login-session.",
-        L"Gendan alle",
+        tr(L"Gendan dine originale indstillinger"),
+        tr(L"Gendanner alle gemte indstillinger, inklusive tidligere spilprofiler, opstartsposter "
+           L"og "
+           L"aktive procesprioriteter.\n\nLuk dine spil først. Ændringer i Windows kan kræve "
+           L"genstart "
+           L"af spil eller en ny login-session."),
+        tr(L"Gendan alle"),
         [] {
           std::wstring prior;
           try {
@@ -1621,14 +1701,14 @@ void activate(int id) {
                 }
                 return error;
               },
-              L"Alle gemte indstillinger er gendannet.", -1, true);
+              tr(L"Alle gemte indstillinger er gendannet."), -1, true);
         },
         true);
     break;
   case 522:
     refreshStates();
     refreshHardware();
-    setStatus(L"Status er læst fra Windows igen.");
+    setStatus(tr(L"Status er læst fra Windows igen."));
     break;
   case 541:
   case 542: {
@@ -1644,20 +1724,20 @@ void activate(int id) {
               tune::restoreStartup(selected.name);
             return std::wstring{};
           },
-          L"Opstart opdateret: " + selected.name, -1, true);
+          tr(L"Opstart opdateret: ") + selected.name, -1, true);
     };
     if (id == 541)
-      showDialog(L"Deaktivér " + selected.name + L" ved opstart?",
-                 L"Programmet bliver ikke afinstalleret. Den registrerede Run-post fjernes, og "
-                 L"dens originale data gemmes, så du kan gendanne den.",
-                 L"Deaktivér opstart", action);
+      showDialog(tr(L"Deaktivér ") + selected.name + tr(L" ved opstart?"),
+                 tr(L"Programmet bliver ikke afinstalleret. Den registrerede Run-post fjernes, og "
+                    L"dens originale data gemmes, så du kan gendanne den."),
+                 tr(L"Deaktivér opstart"), action);
     else
       action();
     break;
   }
   case 543:
     loadStartups();
-    setStatus(L"Opstartslisten er opdateret.");
+    setStatus(tr(L"Opstartslisten er opdateret."));
     break;
   }
   invalidate();
@@ -1667,7 +1747,7 @@ const Hit *hitAt(float x, float y) {
   for (auto i = hits.rbegin(); i != hits.rend(); ++i) {
     if (!i->enabled || !i->rect.contains(x, y))
       continue;
-    if (modal && i->id != 9001 && i->id != 9002)
+    if (modal && i->id != 9001 && i->id != 9002 && !(i->id >= 9100 && i->id <= 9102))
       continue;
     if (!modal && !canvas.interactive(clockNow()) && i->rect.y >= 100 && i->rect.y < 788)
       continue;
@@ -1765,7 +1845,8 @@ void tabFocus(bool reverse) {
   std::vector<const Hit *> order;
   bool modal = dialog.open || dialog.opacity.value(clockNow()) > .01;
   for (auto &h : hits)
-    if (h.enabled && h.id != 1 && h.id != 2 && (!modal || (h.id == 9001 || h.id == 9002)))
+    if (h.enabled && h.id != 1 && h.id != 2 &&
+        (!modal || (h.id == 9001 || h.id == 9002 || (h.id >= 9100 && h.id <= 9102))))
       order.push_back(&h);
   std::stable_sort(order.begin(), order.end(), [](const Hit *a, const Hit *b) {
     return a->rect.y == b->rect.y ? a->rect.x < b->rect.x : a->rect.y < b->rect.y;
@@ -1787,8 +1868,8 @@ void safeActivate(int id) {
   try {
     activate(id);
   } catch (const std::exception &error) {
-    tune::log(L"Fejl: " + tune::errorText(error));
-    setStatus(L"Handlingen blev ikke gennemført.", 3);
+    tune::log(tr(L"Fejl: ") + tune::errorText(error));
+    setStatus(tr(L"Handlingen blev ikke gennemført."), 3);
     errorDialog(tune::errorText(error));
   }
 }
@@ -1810,7 +1891,7 @@ void keyDown(WPARAM key) {
     if (key == VK_TAB)
       tabFocus(shift);
     else if (key == VK_RETURN || key == VK_SPACE)
-      safeActivate(keyboardFocus == 9002 ? 9002 : 9001);
+      safeActivate(dialog.languagePicker ? keyboardFocus : (keyboardFocus == 9002 ? 9002 : 9001));
     return;
   }
   if (control && key == 'K') {
@@ -1903,8 +1984,8 @@ void paint() {
 bool moving() {
   double now = clockNow();
   if (canvas.moving(now) || nav.moving(now) || inspector.moving(now) || notice.moving(now) ||
-      dialog.opacity.moving(now) || dialog.scroll.moving(now) || listPosition.moving(now) || focusPosition.moving(now) ||
-      job.valid() || pingJob.valid())
+      dialog.opacity.moving(now) || dialog.scroll.moving(now) || listPosition.moving(now) ||
+      focusPosition.moving(now) || job.valid() || pingJob.valid())
     return true;
   for (auto &h : hovers)
     if (h.second.moving(now))
@@ -1919,9 +2000,9 @@ void finishPing() {
     try {
       pingResult = pingJob.get();
     } catch (...) {
-      pingResult = L"Målingen kunne ikke gennemføres.";
+      pingResult = tr(L"Målingen kunne ikke gennemføres.");
     }
-    setStatus(L"Pingtesten er afsluttet.");
+    setStatus(tr(L"Pingtesten er afsluttet."));
     invalidate();
   }
 }
@@ -1932,7 +2013,7 @@ void requestClose() {
   }
   if (job.valid()) {
     closeRequested = true;
-    setStatus(L"Afslutter den aktuelle ændring og lukker derefter.", 1);
+    setStatus(tr(L"Afslutter den aktuelle ændring og lukker derefter."), 1);
     return;
   }
   if (inventoryCancel)
@@ -1941,10 +2022,10 @@ void requestClose() {
     restorePriorities();
   } catch (const std::exception &error) {
     showDialog(
-        L"Nogle sessionsvalg kunne ikke gendannes",
-        tune::errorText(error) + L"\n\nDe resterende ændringer varer indtil spilprocesserne "
-                                 L"afsluttes. Vil du lukke alligevel?",
-        L"Luk alligevel", [] { DestroyWindow(window); }, true);
+        tr(L"Nogle sessionsvalg kunne ikke gendannes"),
+        tune::errorText(error) + tr(L"\n\nDe resterende ændringer varer indtil spilprocesserne "
+                                    L"afsluttes. Vil du lukke alligevel?"),
+        tr(L"Luk alligevel"), [] { DestroyWindow(window); }, true);
     return;
   }
   DestroyWindow(window);
@@ -2012,7 +2093,7 @@ void smokeTick() {
     inputFocus = keyboardFocus = 300;
     cursor = 2;
     anchor = 1;
-    showDialog(L"UI-test", L"Ingen systemændring", L"Forstået", {}, false, true);
+    showDialog(L"UI-test", L"Ingen systemændring", tr(L"Forstået"), {}, false, true);
     dismissDialog(false);
     bool focusReturned = inputFocus == 300 && keyboardFocus == 300 && cursor == 2 && anchor == 1;
     if (!focusReturned)
@@ -2042,6 +2123,50 @@ void smokeTick() {
     paint();
     if (canvas.surfaceAllocations() != allocations)
       smokeFailed = true;
+    const auto originalLanguage = l10n::selected.load();
+    const auto originalPreference = tune::read(L"Software\\Maxifying\\UI", L"Language");
+    bool languagesWork = true;
+    for (int language = 0; language < 3; ++language) {
+      languageMenu();
+      paint();
+      keyboardFocus = 9100 + language;
+      SendMessageW(window, WM_KEYDOWN, VK_RETURN, 0);
+      DWORD stored = 99, bytes = sizeof stored;
+      languagesWork = languagesWork && static_cast<int>(l10n::selected.load()) == language &&
+                      RegGetValueW(HKEY_CURRENT_USER, L"Software\\Maxifying\\UI", L"Language",
+                                   RRF_RT_REG_DWORD, nullptr, &stored, &bytes) == ERROR_SUCCESS &&
+                      stored == static_cast<DWORD>(language);
+    }
+    tune::write(L"Software\\Maxifying\\UI", L"Language", originalPreference);
+    l10n::selected = originalLanguage;
+    refreshHardware();
+    status = tr(L"Klar til din næste session.");
+    dialog.opacity.snap(0);
+    navigate(1);
+    search.clear();
+    category = 0;
+    filterFeatures();
+    listPosition.snap(0);
+    Sleep(260); // Only the smoke test: let the page transition finish before measuring scrolling.
+    paint();
+    const unsigned warmCompositions = canvas.compositionPasses();
+    const unsigned warmLayouts = canvas.textLayoutBuilds();
+    LARGE_INTEGER perfStart{}, perfEnd{}, perfFrequency{};
+    QueryPerformanceCounter(&perfStart);
+    for (int frame = 0; frame < 12; ++frame) {
+      listPosition.snap(frame * .4);
+      paint();
+    }
+    QueryPerformanceCounter(&perfEnd);
+    QueryPerformanceFrequency(&perfFrequency);
+    const double frameMilliseconds =
+        (perfEnd.QuadPart - perfStart.QuadPart) * 1000.0 / perfFrequency.QuadPart / 12;
+    const unsigned newLayouts = canvas.textLayoutBuilds() - warmLayouts;
+    const bool cacheWorks = newLayouts == 0 && canvas.cachedLayouts() <= 512 &&
+                            canvas.compositionPasses() == warmCompositions;
+    if (!languagesWork || !cacheWorks)
+      smokeFailed = true;
+    listPosition.snap(0);
     // Exercise downward scrolling through the actual window-message route.
     navigate(1);
     search.clear();
@@ -2060,6 +2185,12 @@ void smokeTick() {
       smokeFailed = true;
     navigate(0);
     std::ofstream report("maxifying-ui-test.txt");
+    report << (languagesWork ? "PASS" : "FAIL")
+           << ": language picker keyboard selection persists all three preferences; original "
+              "restored\n";
+    report << (cacheWorks ? "PASS" : "FAIL") << ": scroll frames build " << newLayouts
+           << " text layouts after warmup; no transition composition; cached="
+           << canvas.cachedLayouts() << "; mean paint=" << frameMilliseconds << "ms (Wine)\n";
     report << (wheelWorks ? "PASS" : "FAIL")
            << ": downward WM_MOUSEWHEEL moves rendered list; fractional burst retained\n";
     report << (focusReturned && safeTab ? "PASS" : "FAIL")
@@ -2119,15 +2250,16 @@ void smokeTick() {
     filterFeatures();
     break;
   case 9:
-    showDialog(L"Windows afviste ændringen",
-               L"Dette er et visuelt testvindue. Ingen systemændring blev udført.\n\nDin originale "
-               L"indstilling og dine backups bevares.",
-               L"Forstået", {}, true, true);
+    showDialog(
+        tr(L"Windows afviste ændringen"),
+        tr(L"Dette er et visuelt testvindue. Ingen systemændring blev udført.\n\nDin originale "
+           L"indstilling og dine backups bevares."),
+        tr(L"Forstået"), {}, true, true);
     break;
   case 10:
     dismissDialog(false);
     inputFocus = 300;
-    search = L"mus";
+    search = l10n::selected == l10n::Language::English ? L"mouse" : L"mus";
     cursor = anchor = search.size();
     filterFeatures();
     break;
@@ -2146,6 +2278,9 @@ void smokeTick() {
   case 13:
     navigate(2);
     switchFocusTab(3);
+    break;
+  case 14:
+    languageMenu();
     break;
   default:
     PostMessageW(window, WM_CLOSE, 0, 0);
@@ -2270,15 +2405,15 @@ LRESULT CALLBACK procedure(HWND w, UINT message, WPARAM a, LPARAM b) {
     const double steps = -static_cast<double>(GET_WHEEL_DELTA_WPARAM(a)) / WHEEL_DELTA;
     const double now = clockNow();
     if (dialog.open) {
-      dialog.scroll.target(std::clamp(dialog.scroll.to + steps * 40, 0.0,
-                                     static_cast<double>(dialog.maximum)), now);
+      dialog.scroll.target(
+          std::clamp(dialog.scroll.to + steps * 40, 0.0, static_cast<double>(dialog.maximum)), now);
       animate();
       invalidate();
       return 0;
     }
     if (page == 1 && filtered.size() > 6) {
       double next = std::clamp(listPosition.to + steps * 76, 0.0,
-                              static_cast<double>(filtered.size() - 6) * 76);
+                               static_cast<double>(filtered.size() - 6) * 76);
       featureOffset = static_cast<size_t>(std::ceil(next / 76));
       listPosition.target(next, now);
       animate();
@@ -2289,8 +2424,8 @@ LRESULT CALLBACK procedure(HWND w, UINT message, WPARAM a, LPARAM b) {
                                      : inventory.apps.size();
       auto &offset = focusTab == 1 ? processOffset : focusTab == 2 ? startupOffset : bloatOffset;
       if (count > 5) {
-        double next = std::clamp(focusPosition.to + steps * 59, 0.0,
-                                static_cast<double>(count - 5) * 59);
+        double next =
+            std::clamp(focusPosition.to + steps * 59, 0.0, static_cast<double>(count - 5) * 59);
         offset = static_cast<size_t>(std::ceil(next / 59));
         focusPosition.target(next, now);
         animate();
@@ -2344,9 +2479,9 @@ LRESULT CALLBACK procedure(HWND w, UINT message, WPARAM a, LPARAM b) {
       static unsigned ticks = 0;
       if (inputFocus)
         invalidate();
-      if (++ticks % 4 == 0) {
+      if (++ticks % 4 == 0 && !moving()) {
         auto before = hardware;
-        refreshHardware();
+        refreshHardware(false);
         if (before != hardware)
           invalidate();
       }
@@ -2391,7 +2526,17 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, LPWSTR arguments, int show) {
     CloseHandle(mutex);
     return 0;
   }
+  DWORD language = 0, languageBytes = sizeof language;
+  if (RegGetValueW(HKEY_CURRENT_USER, L"Software\\Maxifying\\UI", L"Language", RRF_RT_REG_DWORD,
+                   nullptr, &language, &languageBytes) == ERROR_SUCCESS &&
+      language <= 2)
+    l10n::selected = static_cast<l10n::Language>(language);
   smoke = std::wstring(arguments).find(L"--smoke-ui") != std::wstring::npos;
+  const std::wstring commandLine(arguments);
+  if (smoke && commandLine.find(L"--lang=en") != std::wstring::npos)
+    l10n::selected = l10n::Language::English;
+  if (smoke && commandLine.find(L"--lang=sv") != std::wstring::npos)
+    l10n::selected = l10n::Language::Swedish;
   SetProcessDPIAware();
   RECT desktop{};
   SystemParametersInfoW(SPI_GETWORKAREA, 0, &desktop, 0);
@@ -2412,7 +2557,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, LPWSTR arguments, int show) {
   cls.hCursor = LoadCursorW(nullptr, IDC_ARROW);
   if (!RegisterClassW(&cls))
     return 1;
-  HWND w = CreateWindowW(cls.lpszClassName, L"Maxifying 0.5",
+  HWND w = CreateWindowW(cls.lpszClassName, L"Maxifying 0.6",
                          WS_POPUP | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT,
                          CW_USEDEFAULT, pixel(ui::width), pixel(ui::height), nullptr, nullptr,
                          instance, nullptr);

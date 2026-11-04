@@ -1,6 +1,18 @@
-# Validation · Maxifying 0.5
+# Validation · Maxifying 0.6
 
 The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10; Wine outcomes do not establish native Windows behavior or gaming performance.
+
+## Added in 0.6
+
+- 326 unique Danish/English/Swedish catalog entries, including every feature title, description, scope and detailed warning. `assets/translations.json` is the editable source; `scripts/generate-translations.py` generates the compiled catalog. Unknown external strings, user paths and historical activity are preserved.
+- Pure localization tests check completeness, duplicate keys, three-language lookup and unchanged user paths. GUI tests operate the real language picker with keyboard input, read back each saved preference and restore the previous value in the isolated Wine prefix.
+- DirectWrite text layouts and metrics use a bounded 512-entry cache keyed by text, dimensions, font and locale. Moving rows reuse layouts independently of their screen coordinates. UI smoke tests check zero new layouts and zero transition-composition passes on warm scroll frames.
+- Steady scrolling presents the scene directly rather than copying it through the page-transition composition surface. Interrupted page transitions snapshot the last presented surface and still retain three render surfaces.
+- Pagination is clamped to the last valid scroll position, including partial final pages. Motion tests cover the 23-item/6-visible case and shrinking lists.
+- Category widths follow translated text; narrow button labels fit their available width.
+- Nonblocking Direct2D presentation avoids waiting for a second presentation interval inside each paint. The animation timer follows the active monitor's reported refresh rate with a 4 ms lower limit and an 8 ms fallback. The timer stops at idle; native Windows frame pacing remains unverified.
+- Expensive hardware identification is no longer repeated in the live statistics timer; lightweight process/RAM statistics refresh when animation is idle. The hardware summary is a snapshot refreshed explicitly or on language change.
+- The new multi-size ICO and in-app emblem share the asset in `assets/maxifying-icon.png`.
 
 ## Downward-scroll rendering follow-up
 
@@ -33,7 +45,7 @@ The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10
 
 ## Verified
 
-- CMake configured and built the application, resources and test target successfully. CTest ran the Windows test executable through Wine: **4/4 tests passed**.
+- CMake configured and built the application, resources and test target successfully. CTest ran the Windows test executable through Wine: **5/5 tests passed**.
 
 - Release executable built with MinGW, C++17, `-Wall -Wextra -Werror`, static C++ runtime, embedded icon, manifest and version information.
 - Synthetic registry tests: missing original value, original binary data/type, repeated changes retaining the first baseline, repeated restore, backup collision rejection, GPU preference merge preserving unrelated tokens, fullscreen flags preserving existing compatibility flags, missing game executable rejection before backup, and unique/described feature catalog.

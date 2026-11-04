@@ -4,6 +4,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <tuple>
 #include <windows.h>
 namespace ui {
 constexpr float width = 1216, height = 832;
@@ -19,17 +20,26 @@ struct Rect {
     return D2D1::RectF(x, y, x + w, y + h);
   }
 };
+using LayoutKey = std::tuple<std::wstring, float, float, unsigned long long>;
+using LayoutCache = std::map<LayoutKey, IDWriteTextLayout *>;
 class Painter {
   ID2D1RenderTarget *target;
   ID2D1SolidColorBrush *brush = nullptr;
+  ID2D1Bitmap *brand;
   IDWriteFactory *write;
   const std::wstring &family;
   std::map<unsigned long long, IDWriteTextFormat *> &fonts;
+  LayoutCache &layouts;
+  unsigned &layoutBuilds;
+  IDWriteTextLayout *layout(const std::wstring &, float, float, float, bool = false,
+                            DWRITE_TEXT_ALIGNMENT = DWRITE_TEXT_ALIGNMENT_LEADING);
 
 public:
   Painter(ID2D1RenderTarget *target, IDWriteFactory *write,
-          std::map<unsigned long long, IDWriteTextFormat *> &fonts, const std::wstring &family);
+          std::map<unsigned long long, IDWriteTextFormat *> &fonts, const std::wstring &family,
+          LayoutCache &layouts, unsigned &layoutBuilds, ID2D1Bitmap *brand);
   ~Painter();
+  void icon(Rect r);
   void rect(Rect r, unsigned color, float opacity = 1);
   void round(Rect r, unsigned color, float radius = 12, float opacity = 1);
   void border(Rect r, unsigned color, float radius = 12, float opacity = 1, float thickness = 1);
@@ -53,11 +63,14 @@ class Canvas {
   ID2D1HwndRenderTarget *target = nullptr;
   ID2D1BitmapRenderTarget *scene = nullptr, *old = nullptr, *composed = nullptr;
   std::map<unsigned long long, IDWriteTextFormat *> fonts;
+  ID2D1Bitmap *brand = nullptr;
+  LayoutCache layouts;
+  unsigned layoutBuilds = 0, compositions = 0;
   std::wstring fontFamily = L"Segoe UI";
   HWND window = nullptr;
   float scale = 1;
   double transition = -10000;
-  bool validFrame = false;
+  bool validFrame = false, composedFrame = false;
   unsigned surfaces = 0;
   unsigned long long serial = 0, snapshotSerial = ~0ull;
   HRESULT ensure();
@@ -74,6 +87,15 @@ public:
     return now - transition >= 120;
   }
   size_t caretPosition(const std::wstring &value, float x);
+  size_t cachedLayouts() const {
+    return layouts.size();
+  }
+  unsigned compositionPasses() const {
+    return compositions;
+  }
+  unsigned textLayoutBuilds() const {
+    return layoutBuilds;
+  }
   unsigned surfaceAllocations() const {
     return surfaces;
   }

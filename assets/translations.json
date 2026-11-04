@@ -1,0 +1,1306 @@
+{
+  "Netværk": [
+    "Network",
+    "Nätverk"
+  ],
+  "Klar til din næste session.": [
+    "Ready for your next session.",
+    "Redo för din nästa session."
+  ],
+  "Ingen måling endnu.": [
+    "No measurement yet.",
+    "Ingen mätning ännu."
+  ],
+  "DU HAR KONTROLLEN": [
+    "YOU ARE IN CONTROL",
+    "DU HAR KONTROLLEN"
+  ],
+  "Vælg en app": [
+    "Select an app",
+    "Välj en app"
+  ],
+  "Vælg spillets .exe først": [
+    "Select the game's .exe first",
+    "Välj spelets .exe först"
+  ],
+  "Ændringen blev ikke gennemført": [
+    "The change was not completed",
+    "Ändringen kunde inte genomföras"
+  ],
+  "\n\nEventuelle originale backups er stadig gemt. Du kan se status under Gendannelse.": [
+    "\n\nAny original backups are still saved. Check their status under Restore.",
+    "\n\nEventuella originalkopior finns kvar. Se status under Återställning."
+  ],
+  "Forstået": [
+    "Got it",
+    "Jag förstår"
+  ],
+  "EcoQoS kræver afprøvning på Windows 11": [
+    "EcoQoS requires testing on Windows 11",
+    "EcoQoS kräver testning på Windows 11"
+  ],
+  "Windows tillader ikke EcoQoS på denne proces": [
+    "Windows does not allow EcoQoS for this process",
+    "Windows tillåter inte EcoQoS för denna process"
+  ],
+  "EcoQoS: execution-speed throttling er tvunget fra": [
+    "EcoQoS: execution-speed throttling is forced off",
+    "EcoQoS: execution-speed throttling är avstängd"
+  ],
+  "EcoQoS: execution-speed throttling er aktiv": [
+    "EcoQoS: execution-speed throttling is active",
+    "EcoQoS: execution-speed throttling är aktiv"
+  ],
+  "EcoQoS: Windows-styret / ikke aktiv lige nu": [
+    "EcoQoS: Windows managed / currently inactive",
+    "EcoQoS: Windows-styrt / inte aktivt just nu"
+  ],
+  "EcoQoS execution-speed throttling fra: ": [
+    "EcoQoS execution-speed throttling off: ",
+    "EcoQoS execution-speed throttling av: "
+  ],
+  "Proces-strømbegrænsning slået fra. Originaltilstanden gendannes ved normal applukning.": [
+    "Process power throttling disabled. The original state returns when Maxifying closes normally.",
+    "Processens strömbegränsning är avstängd. Ursprungsläget återställs när Maxifying stängs normalt."
+  ],
+  "Ukendt fejl. Backups bevares.": [
+    "Unknown error. Backups are kept.",
+    "Okänt fel. Säkerhetskopiorna behålls."
+  ],
+  "Arbejder. Du kan fortsat navigere i appen.": [
+    "Working. You can still navigate the app.",
+    "Arbetar. Du kan fortsätta navigera i appen."
+  ],
+  "Fejl: ": [
+    "Error: ",
+    "Fel: "
+  ],
+  "Ændringen blev ikke gennemført. Se oplysningerne.": [
+    "The change was not completed. See details.",
+    "Ändringen genomfördes inte. Se detaljerna."
+  ],
+  "Minimal desktop": [
+    "Minimal desktop",
+    "Minimalt skrivbord"
+  ],
+  "Disse indstillinger tilpasses, og deres originale værdier gemmes:\n\n": [
+    "These settings will change and their original values will be saved:\n\n",
+    "Dessa inställningar ändras och originalvärdena sparas:\n\n"
+  ],
+  "\nGenstart browserne. Baggrundsudvidelser og notifikationer kan stoppe. Åbne apps og Windows-tjenester lukkes ikke.": [
+    "\nRestart your browsers. Background extensions and notifications may stop. Open apps and Windows services are not closed.",
+    "\nStarta om webbläsarna. Bakgrundstillägg och aviseringar kan sluta fungera. Öppna appar och Windows-tjänster stängs inte."
+  ],
+  "\nÆndrer Windows-museadfærd og tilgængelighedsgenveje. Raw-input-spil kan ignorere museindstillingerne.": [
+    "\nChanges Windows mouse behavior and accessibility shortcuts. Raw-input games may ignore mouse settings.",
+    "\nÄndrar Windows musbeteende och hjälpmedelsgenvägar. Spel med raw input kan ignorera musinställningarna."
+  ],
+  "\nEffekten afhænger af spil, hardware og dine præferencer. Ingen garanteret FPS-forbedring.": [
+    "\nResults depend on the game, hardware and your preferences. No guaranteed FPS improvement.",
+    "\nResultatet beror på spel, hårdvara och dina preferenser. Ingen garanterad FPS-förbättring."
+  ],
+  "Anvend profil": [
+    "Apply profile",
+    "Använd profil"
+  ],
+  "Profil anvendt. Originale indstillinger kan gendannes.": [
+    "Profile applied. Original settings can be restored.",
+    "Profilen har aktiverats. Originalinställningarna kan återställas."
+  ],
+  "Gendannet: ": [
+    "Restored: ",
+    "Återställt: "
+  ],
+  "Anvendt: ": [
+    "Applied: ",
+    "Tillämpat: "
+  ],
+  "\n\nOriginalværdien gemmes før ændringen.": [
+    "\n\nThe original value is saved before the change.",
+    "\n\nOriginalvärdet sparas före ändringen."
+  ],
+  "Anvend ændring": [
+    "Apply change",
+    "Tillämpa ändring"
+  ],
+  "D I T   P E R F O R M A N C E - W O R K S P A C E": [
+    "Y O U R   P E R F O R M A N C E   W O R K S P A C E",
+    "D I N   P R E S T A N D A A R B E T S P L A T S"
+  ],
+  "Mindre støj.\nMere spil.": [
+    "Less noise.\nMore play.",
+    "Mindre brus.\nMer spel."
+  ],
+  "Tilpas Windows til din session. Vælg præcis, hvad der ændres — og behold en vej tilbage.": [
+    "Tune Windows for your session. Choose exactly what changes — and keep a way back.",
+    "Anpassa Windows till din session. Välj exakt vad som ändras — och behåll en väg tillbaka."
+  ],
+  "Klargør fokus": [
+    "Prepare focus",
+    "Förbered fokus"
+  ],
+  "3 baggrundsvalg · kan gendannes": [
+    "3 background settings · reversible",
+    "3 bakgrundsval · kan återställas"
+  ],
+  "LIGE NU PÅ DIN PC": [
+    "YOUR PC RIGHT NOW",
+    "DIN DATOR JUST NU"
+  ],
+  "kørende processer": [
+    "running processes",
+    "aktiva processer"
+  ],
+  "RAM i brug / ": [
+    "RAM in use / ",
+    "RAM i bruk / "
+  ],
+  "aktive tråde": [
+    "active threads",
+    "aktiva trådar"
+  ],
+  "Vælg din retning": [
+    "Choose your direction",
+    "Välj din riktning"
+  ],
+  "Game Mode og optagelse": [
+    "Game Mode and recording",
+    "Spelläge och inspelning"
+  ],
+  "Mus og tastaturgenveje": [
+    "Mouse and keyboard shortcuts",
+    "Mus- och tangentbordsgenvägar"
+  ],
+  "Mindre bevægelse på skrivebordet": [
+    "Less desktop motion",
+    "Mindre rörelse på skrivbordet"
+  ],
+  "Din maskine": [
+    "Your machine",
+    "Din dator"
+  ],
+  "LOKALT / INGEN KONTO": [
+    "LOCAL / NO ACCOUNT",
+    "LOKALT / INGET KONTO"
+  ],
+  "INDIVIDUEL KONTROL": [
+    "INDIVIDUAL CONTROL",
+    "INDIVIDUELL KONTROLL"
+  ],
+  "Finjustér din PC.": [
+    "Fine-tune your PC.",
+    "Finjustera din dator."
+  ],
+  "Vælg en indstilling for at se effekt, begrænsninger og gendannelse.": [
+    "Select a setting to see its effect, limitations and restore options.",
+    "Välj en inställning för att se effekt, begränsningar och återställning."
+  ],
+  "Søg efter en indstilling…": [
+    "Search settings…",
+    "Sök efter en inställning…"
+  ],
+  "Ingen match. Prøv et andet søgeord.": [
+    "No matches. Try another search.",
+    "Inga träffar. Försök med ett annat sökord."
+  ],
+  " af ": [
+    " of ",
+    " av "
+  ],
+  " indstillinger": [
+    " settings",
+    " inställningar"
+  ],
+  "Næste": [
+    "Next",
+    "Nästa"
+  ],
+  "ØNSKET VÆRDI ER VALGT": [
+    "TARGET VALUE SELECTED",
+    "ÖNSKAT VÄRDE ÄR VALT"
+  ],
+  "KLAR TIL TILPASNING": [
+    "READY TO CUSTOMIZE",
+    "REDO ATT ANPASSA"
+  ],
+  "IKKE TILGÆNGELIG": [
+    "UNAVAILABLE",
+    "INTE TILLGÄNGLIGT"
+  ],
+  "Din originalværdi er gemt.": [
+    "Your original value is saved.",
+    "Ditt originalvärde är sparat."
+  ],
+  "Værdien var allerede valgt i Windows.": [
+    "This value was already selected in Windows.",
+    "Värdet var redan valt i Windows."
+  ],
+  "Originalværdien gemmes før ændring.": [
+    "The original value is saved before any change.",
+    "Originalvärdet sparas före ändringen."
+  ],
+  "Allerede valgt": [
+    "Already selected",
+    "Redan valt"
+  ],
+  "Læs hele forklaringen": [
+    "Read the full explanation",
+    "Läs hela förklaringen"
+  ],
+  "Kørende apps": [
+    "Running apps",
+    "Aktiva appar"
+  ],
+  "Valgfrie Windows-apps": [
+    "Optional Windows apps",
+    "Valfria Windows-appar"
+  ],
+  "Henter…": [
+    "Loading…",
+    "Hämtar…"
+  ],
+  "Windows læser listen. Ingen apps ændres ved scanning.": [
+    "Windows is reading the list. Scanning changes no apps.",
+    "Windows läser listan. Inga appar ändras vid skanning."
+  ],
+  "Ingen af de ni kendte valgfrie apps blev fundet. Dette er ikke en komplet liste over alle installerede programmer.": [
+    "None of the nine known optional apps were found. This is not a complete list of installed programs.",
+    "Ingen av de nio kända valfria apparna hittades. Detta är inte en fullständig lista över installerade program."
+  ],
+  "Installeret for din bruger": [
+    "Installed for your user",
+    "Installerad för din användare"
+  ],
+  "Fjernet · kan søges i Store": [
+    "Removed · find it in Store",
+    "Borttagen · kan sökas i Store"
+  ],
+  "Oprydning med omtanke": [
+    "Thoughtful cleanup",
+    "Genomtänkt rensning"
+  ],
+  "Kun udvalgte, valgfrie apps vises. Store, sikkerhed, frameworks og gaming-tjenester fjernes ikke.": [
+    "Only selected optional apps are shown. Store, security, frameworks and gaming services are kept.",
+    "Endast utvalda valfria appar visas. Store, säkerhet, ramverk och speltjänster behålls."
+  ],
+  "Afinstallation kan slette appdata. Gendan alle kan ikke genskabe apps. Mindre diskforbrug er ikke i sig selv lavere latency.": [
+    "Uninstalling can delete app data. Restore all cannot reinstall apps. Less disk usage alone does not mean lower latency.",
+    "Avinstallation kan radera appdata. Återställ alla kan inte återskapa appar. Mindre diskutrymme betyder inte i sig lägre latens."
+  ],
+  "Afinstaller den valgte app": [
+    "Uninstall selected app",
+    "Avinstallera vald app"
+  ],
+  "Find den valgte app i Store": [
+    "Find selected app in Store",
+    "Hitta vald app i Store"
+  ],
+  "DIN NÆSTE SESSION": [
+    "YOUR NEXT SESSION",
+    "DIN NÄSTA SESSION"
+  ],
+  "Fokus, på dine præmisser.": [
+    "Focus, on your terms.",
+    "Fokus, på dina villkor."
+  ],
+  "Et spil ad gangen. Et program ad gangen. Ingen blind lukning af Windows-processer.": [
+    "One game at a time. One app at a time. No indiscriminate closing of Windows processes.",
+    "Ett spel i taget. Ett program i taget. Ingen blind stängning av Windows-processer."
+  ],
+  "Vælg spillets rigtige programfil": [
+    "Select the game's actual executable",
+    "Välj spelets riktiga programfil"
+  ],
+  "Intet spil valgt endnu": [
+    "No game selected yet",
+    "Inget spel valt ännu"
+  ],
+  "Vælg en .exe": [
+    "Choose an .exe",
+    "Välj en .exe"
+  ],
+  "Vælg et andet spil": [
+    "Choose another game",
+    "Välj ett annat spel"
+  ],
+  "Ændringerne gælder kun denne fil. Genstart spillet bagefter.": [
+    "Changes apply only to this file. Restart the game afterwards.",
+    "Ändringarna gäller bara denna fil. Starta om spelet efteråt."
+  ],
+  "MÅL FØR / EFTER": [
+    "MEASURE BEFORE / AFTER",
+    "MÄT FÖRE / EFTER"
+  ],
+  "Præference.\nIkke et FPS-løfte.": [
+    "A preference.\nNo FPS promise.",
+    "En preferens.\nInget FPS-löfte."
+  ],
+  "GPU-valget er et ønske til Windows og driveren. Fullscreen-valget er en valgfri A/B-test og kan forringe ydelse, VRR eller Alt-Tab.": [
+    "GPU selection is a preference for Windows and the driver. Fullscreen is an optional A/B test and may worsen performance, VRR or Alt-Tab.",
+    "GPU-valet är ett önskemål till Windows och drivrutinen. Fullskärmsvalet är ett valfritt A/B-test som kan försämra prestanda, VRR eller Alt-Tab."
+  ],
+  "Åbn Windows-grafikindstillinger": [
+    "Open Windows graphics settings",
+    "Öppna Windows grafikinställningar"
+  ],
+  "Apps med hovedvinduer": [
+    "Apps with main windows",
+    "Appar med huvudfönster"
+  ],
+  "Din brugers opstartsposter": [
+    "Your user's startup entries",
+    "Din användares autostartposter"
+  ],
+  "Ingen andre tilgængelige apps med hovedvinduer.": [
+    "No other accessible apps with main windows.",
+    "Inga andra tillgängliga appar med huvudfönster."
+  ],
+  "Ingen registrerede opstartsposter.": [
+    "No registered startup entries.",
+    "Inga registrerade autostartposter."
+  ],
+  "Registreret Run-post": [
+    "Registered Run entry",
+    "Registrerad Run-post"
+  ],
+  "Fjernet · original gemt": [
+    "Removed · original saved",
+    "Borttagen · original sparat"
+  ],
+  "Prioritet og EcoQoS gælder kun denne proces og gendannes ved normal applukning. Ingen globale timer- eller driverændringer.": [
+    "Priority and EcoQoS affect only this process and are restored on normal app close. No global timer or driver changes.",
+    "Prioritet och EcoQoS gäller bara denna process och återställs när appen stängs normalt. Inga globala timer- eller drivrutinsändringar."
+  ],
+  "Brug Above Normal": [
+    "Use Above Normal",
+    "Använd Above Normal"
+  ],
+  "Strømbegrænsning er fjernet": [
+    "Power throttling is disabled",
+    "Strömbegränsningen är avstängd"
+  ],
+  "Fjern proces-strømbegrænsning": [
+    "Disable process power throttling",
+    "Ta bort processens strömbegränsning"
+  ],
+  "Bed appen lukke": [
+    "Ask app to close",
+    "Be appen att stänga"
+  ],
+  "Gendan session": [
+    "Restore session",
+    "Återställ session"
+  ],
+  "Start mindre automatisk": [
+    "Start less automatically",
+    "Starta mindre automatiskt"
+  ],
+  "Fjerner kun den valgte Run-post. Programmet afinstalleres ikke. Windows-godkendelser, tjenester og planlagte opgaver er uden for denne liste.": [
+    "Removes only the selected Run entry. The program is not uninstalled. Windows approvals, services and scheduled tasks are outside this list.",
+    "Tar bara bort den valda Run-posten. Programmet avinstalleras inte. Windows-godkännanden, tjänster och schemalagda uppgifter ingår inte i listan."
+  ],
+  "Deaktivér opstart": [
+    "Disable startup",
+    "Inaktivera autostart"
+  ],
+  "Gendan opstart": [
+    "Restore startup",
+    "Återställ autostart"
+  ],
+  "Alle opstartsapps i Windows": [
+    "All startup apps in Windows",
+    "Alla autostartappar i Windows"
+  ],
+  "NETVÆRK / FEJLFINDING": [
+    "NETWORK / TROUBLESHOOTING",
+    "NÄTVERK / FELSÖKNING"
+  ],
+  "Se forbindelsen, som den er.": [
+    "See your connection as it is.",
+    "Se anslutningen som den är."
+  ],
+  "Ping måler ICMP round-trip-tid. Det er ikke en måling af input-latency i dit spil.": [
+    "Ping measures ICMP round-trip time. It does not measure input latency in your game.",
+    "Ping mäter ICMP-tur-och-returtid. Det mäter inte inmatningslatens i ditt spel."
+  ],
+  "4 PAKKER / IPv4": [
+    "4 PACKETS / IPv4",
+    "4 PAKET / IPv4"
+  ],
+  "Hvor vil du måle hen?": [
+    "Where do you want to measure?",
+    "Vart vill du mäta?"
+  ],
+  "Fx 1.1.1.1": [
+    "E.g. 1.1.1.1",
+    "T.ex. 1.1.1.1"
+  ],
+  "Måler…": [
+    "Measuring…",
+    "Mäter…"
+  ],
+  "Mål forbindelsen": [
+    "Measure connection",
+    "Mät anslutningen"
+  ],
+  "Et rent DNS-opslag": [
+    "A fresh DNS lookup",
+    "Ett nytt DNS-uppslag"
+  ],
+  "Ryd cache ved navneopslagsproblemer. Det ændrer ikke din DNS-server og garanterer ikke bedre ping.": [
+    "Clear the cache to troubleshoot name resolution. This does not change your DNS server or guarantee better ping.",
+    "Rensa cachen vid namnuppslagsproblem. Det ändrar inte DNS-servern och garanterar inte bättre ping."
+  ],
+  "Cacheposter kan ikke gendannes. Windows opbygger automatisk en ny cache ved efterfølgende opslag.": [
+    "Cache entries cannot be restored. Windows builds a new cache automatically during subsequent lookups.",
+    "Cacheposter kan inte återställas. Windows bygger automatiskt en ny cache vid efterföljande uppslag."
+  ],
+  "Ryd DNS-cache": [
+    "Flush DNS cache",
+    "Rensa DNS-cache"
+  ],
+  "Åbn Windows-netværksindstillinger": [
+    "Open Windows network settings",
+    "Öppna Windows nätverksinställningar"
+  ],
+  "HISTORIK / GENDANNELSE": [
+    "HISTORY / RESTORE",
+    "HISTORIK / ÅTERSTÄLLNING"
+  ],
+  "Du har altid overblikket.": [
+    "Stay in control.",
+    "Behåll överblicken."
+  ],
+  "Originale indstillinger gemmes lokalt — også for tidligere valgte spil og opstartsposter.": [
+    "Original settings are saved locally — including previously selected games and startup entries.",
+    "Originalinställningar sparas lokalt — även för tidigare valda spel och autostartposter."
+  ],
+  "Seneste aktivitet": [
+    "Recent activity",
+    "Senaste aktivitet"
+  ],
+  "Din historik begynder, når du foretager en ændring.": [
+    "Your history begins when you make a change.",
+    "Din historik börjar när du gör en ändring."
+  ],
+  "gemte originale tilstande": [
+    "saved original states",
+    "sparade ursprungslägen"
+  ],
+  "Gendanner også gamle GameTune-backups og midlertidige sessionsvalg. Luk dine spil først.": [
+    "Also restores old GameTune backups and temporary session settings. Close your games first.",
+    "Återställer även gamla GameTune-kopior och tillfälliga sessionsval. Stäng dina spel först."
+  ],
+  "Gendan alle ændringer": [
+    "Restore all changes",
+    "Återställ alla ändringar"
+  ],
+  "Eksportér rapport": [
+    "Export report",
+    "Exportera rapport"
+  ],
+  "Opdater status": [
+    "Refresh status",
+    "Uppdatera status"
+  ],
+  "DETALJER / MAXIFYING": [
+    "DETAILS / MAXIFYING",
+    "DETALJER / MAXIFYING"
+  ],
+  "BEKRÆFT ÆNDRING": [
+    "CONFIRM CHANGE",
+    "BEKRÄFTA ÄNDRING"
+  ],
+  "Rul for at læse resten": [
+    "Scroll to read more",
+    "Rulla för att läsa mer"
+  ],
+  "Eksportér Maxifying-rapport": [
+    "Export Maxifying report",
+    "Exportera Maxifying-rapport"
+  ],
+  "Vælg spillets rigtige .exe": [
+    "Select the game's actual .exe",
+    "Välj spelets riktiga .exe"
+  ],
+  "Valgt spil: ": [
+    "Selected game: ",
+    "Valt spel: "
+  ],
+  "Ønsket værdi valgt": [
+    "Target value selected",
+    "Önskat värde valt"
+  ],
+  "Ikke tilpasset": [
+    "Not customized",
+    "Inte anpassat"
+  ],
+  "Rapport gemt. Den indeholder hardwareoplysninger og lokal aktivitetshistorik.": [
+    "Report saved. It contains hardware details and local activity history.",
+    "Rapporten sparades. Den innehåller hårdvaruinformation och lokal aktivitetshistorik."
+  ],
+  "DNS-cache ryddet": [
+    "DNS cache flushed",
+    "DNS-cache rensad"
+  ],
+  "Ugyldig IPv4-adresse.": [
+    "Invalid IPv4 address.",
+    "Ogiltig IPv4-adress."
+  ],
+  "ICMP er ikke tilgængeligt på denne maskine.": [
+    "ICMP is unavailable on this machine.",
+    "ICMP är inte tillgängligt på denna dator."
+  ],
+  "0/4 svar. ICMP kan være blokeret; det beviser ikke, at internet eller spilforbindelsen er nede.": [
+    "0/4 replies. ICMP may be blocked; this does not prove that your internet or game connection is down.",
+    "0/4 svar. ICMP kan vara blockerat; det bevisar inte att internet- eller spelanslutningen ligger nere."
+  ],
+  "/4 svar · ": [
+    "/4 replies · ",
+    "/4 svar · "
+  ],
+  "% pakketab\n\nMin / gennemsnit / maks\n": [
+    "% packet loss\n\nMin / average / max\n",
+    "% paketförlust\n\nMin / medel / max\n"
+  ],
+  " ms\n\nSpillets egen server kan have en anden RTT.": [
+    " ms\n\nThe game's own server may have a different RTT.",
+    " ms\n\nSpelets egen server kan ha en annan RTT."
+  ],
+  "Der er allerede gemt en prioritet for denne app.": [
+    "A priority is already saved for this app.",
+    "En prioritet är redan sparad för denna app."
+  ],
+  "Midlertidig Above Normal: ": [
+    "Temporary Above Normal: ",
+    "Tillfällig Above Normal: "
+  ],
+  "Above Normal anvendt. Gendannes ved normal applukning eller manuelt.": [
+    "Above Normal applied. Restored on normal close or manually.",
+    "Above Normal tillämpat. Återställs vid normal stängning eller manuellt."
+  ],
+  "Luk ": [
+    "Close ",
+    "Stäng "
+  ],
+  "Appen bliver bedt om at lukke normalt. Den kan spørge om at gemme arbejde eller blive i systembakken.\n\nIngen proces bliver tvangsafsluttet.": [
+    "The app will be asked to close normally. It may ask to save your work or stay in the tray.\n\nNo process is forcibly terminated.",
+    "Appen ombeds att stänga normalt. Den kan fråga om att spara eller stanna i systemfältet.\n\nIngen process tvångsavslutas."
+  ],
+  "Send lukkeanmodning": [
+    "Send close request",
+    "Skicka stängningsbegäran"
+  ],
+  "Lukkeanmodning sendt. Appen kan bede om at gemme eller blive i bakken.": [
+    "Close request sent. The app may ask to save or stay in the tray.",
+    "Stängningsbegäran skickad. Appen kan fråga om att spara eller stanna i systemfältet."
+  ],
+  "Indtast en IPv4-adresse": [
+    "Enter an IPv4 address",
+    "Ange en IPv4-adress"
+  ],
+  "Brug fire tal adskilt af punktummer. For eksempel 1.1.1.1 eller 8.8.8.8.": [
+    "Use four numbers separated by dots. For example 1.1.1.1 or 8.8.8.8.",
+    "Använd fyra tal avskilda med punkter. Till exempel 1.1.1.1 eller 8.8.8.8."
+  ],
+  "Sender fire pakker. Målingen vises her, når den er klar.": [
+    "Sending four packets. The result will appear here when ready.",
+    "Skickar fyra paket. Resultatet visas här när det är klart."
+  ],
+  "Den aktuelle ændring afsluttes først.": [
+    "The current change will finish first.",
+    "Den aktuella ändringen slutförs först."
+  ],
+  "Sessionsvalg er gendannet.": [
+    "Session settings restored.",
+    "Sessionsvalen har återställts."
+  ],
+  "Listen over apps er opdateret.": [
+    "App list refreshed.",
+    "Applistan har uppdaterats."
+  ],
+  "Fjern strømbegrænsning fra denne proces?": [
+    "Disable power throttling for this process?",
+    "Ta bort strömbegränsningen för denna process?"
+  ],
+  "Slår execution-speed throttling (EcoQoS) fra for netop den valgte app. Andre strømflag bevares. Det kan øge strømforbruget.\n\nDet ændrer ikke globale timere, HPET, CPU-affinity eller drivere. En lavere latency er ikke garanteret. Tilstanden gendannes ved normal applukning; ved crash varer den indtil spillet afsluttes.": [
+    "Disables execution-speed throttling (EcoQoS) only for the selected app. Other power flags are kept. This may increase power usage.\n\nDoes not change global timers, HPET, CPU affinity or drivers. Lower latency is not guaranteed. Restored on normal close; after a crash it lasts until the game exits.",
+    "Stänger av execution-speed throttling (EcoQoS) bara för vald app. Andra strömflaggor behålls. Strömförbrukningen kan öka.\n\nÄndrar inte globala timers, HPET, CPU-affinitet eller drivrutiner. Lägre latens garanteras inte. Återställs vid normal stängning; efter krasch gäller det tills spelet avslutas."
+  ],
+  "Anvend for denne session": [
+    "Apply for this session",
+    "Använd för denna session"
+  ],
+  "Afinstaller ": [
+    "Uninstall ",
+    "Avinstallera "
+  ],
+  "Dette kan ikke fortrydes af Maxifying. Gendan alle geninstallerer ikke apps. Appdata kan blive slettet.\n\n": [
+    "Maxifying cannot undo this. Restore all does not reinstall apps. App data may be deleted.\n\n",
+    "Maxifying kan inte ångra detta. Återställ alla installerar inte om appar. Appdata kan raderas.\n\n"
+  ],
+  "\n\nPakke: ": [
+    "\n\nPackage: ",
+    "\n\nPaket: "
+  ],
+  "\n\nKun denne brugers pakke fjernes. Windows Store, frameworks, Windows-sikkerhed og gaming-tjenester er ikke med i listen. Du kan normalt finde appen i Store igen, men lokale data genskabes ikke automatisk.": [
+    "\n\nOnly this user's package is removed. Windows Store, frameworks, Windows security and gaming services are excluded. You can usually find the app in Store again, but local data is not automatically restored.",
+    "\n\nBara denna användares paket tas bort. Windows Store, ramverk, Windows-säkerhet och speltjänster ingår inte. Appen kan oftast hittas i Store igen, men lokala data återskapas inte automatiskt."
+  ],
+  "Afinstaller kun for mig": [
+    "Uninstall for me only",
+    "Avinstallera bara för mig"
+  ],
+  "Afinstalleret valgfri Windows-app: ": [
+    "Uninstalled optional Windows app: ",
+    "Avinstallerad valfri Windows-app: "
+  ],
+  ". Geninstallation kræver Store.": [
+    ". Reinstall through Store.",
+    ". Installera om via Store."
+  ],
+  "Windows-app afinstalleret for din bruger. Gendan alle geninstallerer den ikke.": [
+    "Windows app uninstalled for your user. Restore all does not reinstall it.",
+    "Windows-appen avinstallerades för din användare. Återställ alla installerar inte om den."
+  ],
+  "Ryd DNS-cache?": [
+    "Flush DNS cache?",
+    "Rensa DNS-cache?"
+  ],
+  "Brug dette ved navneopslagsproblemer. Det ændrer ikke DNS-serveren og er ikke en garanteret ping-forbedring.\n\nCacheposter kan ikke gendannes. Windows opbygger automatisk en ny cache ved nye opslag.": [
+    "Use this for name-resolution issues. It does not change your DNS server or guarantee better ping.\n\nCache entries cannot be restored. Windows builds a new cache automatically during new lookups.",
+    "Använd vid namnuppslagsproblem. Det ändrar inte DNS-servern och garanterar inte bättre ping.\n\nCacheposter kan inte återställas. Windows bygger automatiskt en ny cache vid nya uppslag."
+  ],
+  "Ryd cache": [
+    "Clear cache",
+    "Rensa cache"
+  ],
+  "DNS-cache er ryddet.": [
+    "DNS cache flushed.",
+    "DNS-cachen är rensad."
+  ],
+  "Gendan dine originale indstillinger": [
+    "Restore your original settings",
+    "Återställ dina originalinställningar"
+  ],
+  "Gendanner alle gemte indstillinger, inklusive tidligere spilprofiler, opstartsposter og aktive procesprioriteter.\n\nLuk dine spil først. Ændringer i Windows kan kræve genstart af spil eller en ny login-session.": [
+    "Restores all saved settings, including earlier game profiles, startup entries and active process priorities.\n\nClose your games first. Windows changes may require restarting games or signing in again.",
+    "Återställer alla sparade inställningar, inklusive tidigare spelprofiler, autostartposter och aktiva processprioriteter.\n\nStäng dina spel först. Ändringar i Windows kan kräva omstart av spel eller ny inloggning."
+  ],
+  "Gendan alle": [
+    "Restore all",
+    "Återställ alla"
+  ],
+  "Alle gemte indstillinger er gendannet.": [
+    "All saved settings have been restored.",
+    "Alla sparade inställningar har återställts."
+  ],
+  "Status er læst fra Windows igen.": [
+    "Status refreshed from Windows.",
+    "Status har lästs från Windows igen."
+  ],
+  "Opstart opdateret: ": [
+    "Startup updated: ",
+    "Autostart uppdaterad: "
+  ],
+  "Deaktivér ": [
+    "Disable ",
+    "Inaktivera "
+  ],
+  " ved opstart?": [
+    " at startup?",
+    " vid autostart?"
+  ],
+  "Programmet bliver ikke afinstalleret. Den registrerede Run-post fjernes, og dens originale data gemmes, så du kan gendanne den.": [
+    "The program is not uninstalled. Its registered Run entry is removed and the original data is saved so you can restore it.",
+    "Programmet avinstalleras inte. Den registrerade Run-posten tas bort och originaldata sparas så att du kan återställa den."
+  ],
+  "Opstartslisten er opdateret.": [
+    "Startup list refreshed.",
+    "Autostartlistan har uppdaterats."
+  ],
+  "Handlingen blev ikke gennemført.": [
+    "The action was not completed.",
+    "Åtgärden genomfördes inte."
+  ],
+  "Målingen kunne ikke gennemføres.": [
+    "The measurement could not be completed.",
+    "Mätningen kunde inte genomföras."
+  ],
+  "Pingtesten er afsluttet.": [
+    "Ping test finished.",
+    "Pingtestet är klart."
+  ],
+  "Afslutter den aktuelle ændring og lukker derefter.": [
+    "Finishing the current change, then closing.",
+    "Slutför den aktuella ändringen och stänger sedan."
+  ],
+  "Nogle sessionsvalg kunne ikke gendannes": [
+    "Some session settings could not be restored",
+    "Vissa sessionsval kunde inte återställas"
+  ],
+  "\n\nDe resterende ændringer varer indtil spilprocesserne afsluttes. Vil du lukke alligevel?": [
+    "\n\nThe remaining changes last until the game processes exit. Close anyway?",
+    "\n\nDe återstående ändringarna gäller tills spelprocesserna avslutas. Stäng ändå?"
+  ],
+  "Luk alligevel": [
+    "Close anyway",
+    "Stäng ändå"
+  ],
+  "Windows afviste ændringen": [
+    "Windows rejected the change",
+    "Windows avvisade ändringen"
+  ],
+  "Dette er et visuelt testvindue. Ingen systemændring blev udført.\n\nDin originale indstilling og dine backups bevares.": [
+    "This is a visual test dialog. No system change was made.\n\nYour original setting and backups are kept.",
+    "Detta är en visuell testdialog. Ingen systemändring gjordes.\n\nDin originalinställning och dina säkerhetskopior behålls."
+  ],
+  "Lad Windows prioritere spillet, når det kører.": [
+    "Let Windows prioritize the game while it runs.",
+    "Låt Windows prioritera spelet när det körs."
+  ],
+  "Aktiverer Windows Game Mode for din bruger. Effekten afhænger af spil, baggrundsbelastning og Windows-version. Genstart spillet efter ændringen.": [
+    "Enables Windows Game Mode for your user. Results depend on the game, background load and Windows version. Restart the game after changing this.",
+    "Aktiverar Windows spelläge för din användare. Effekten beror på spel, bakgrundsbelastning och Windows-version. Starta om spelet efter ändringen."
+  ],
+  "Genstart spil": [
+    "Restart game",
+    "Starta om spelet"
+  ],
+  "Slå Game DVR-optagelser fra, hvis du ikke bruger klip.": [
+    "Disable Game DVR recording if you do not use clips.",
+    "Stäng av Game DVR-inspelning om du inte använder klipp."
+  ],
+  "Deaktiverer brugerens Game DVR- og App Capture-indstillinger. Påvirker Xbox Game Bar-klip; genstart spil eller log ind igen. Det lukker ikke alle tredjeparts-overlays.": [
+    "Disables your user's Game DVR and App Capture settings. Affects Xbox Game Bar clips; restart games or sign in again. Does not close every third-party overlay.",
+    "Stänger av användarens Game DVR- och App Capture-inställningar. Påverkar Xbox Game Bar-klipp; starta om spelet eller logga in igen. Stänger inte alla tredjepartsöverlägg."
+  ],
+  "Høj ydeevne": [
+    "High performance",
+    "Hög prestanda"
+  ],
+  "Vælg Windows' høj ydeevne-strømprofil.": [
+    "Select Windows' High performance power plan.",
+    "Välj Windows energischema Hög prestanda."
+  ],
+  "Kan øge strømforbrug, varme og blæserstøj. Bedre FPS er ikke garanteret. Profilen findes ofte ikke på Modern Standby-laptops. Appen opretter eller ændrer ikke andre profiler.": [
+    "May increase power usage, heat and fan noise. Better FPS is not guaranteed. This plan is often unavailable on Modern Standby laptops. The app does not create or change other plans.",
+    "Kan öka strömförbrukning, värme och fläktljud. Bättre FPS garanteras inte. Schemat saknas ofta på Modern Standby-datorer. Appen skapar eller ändrar inte andra scheman."
+  ],
+  "Mere strøm / varme": [
+    "More power / heat",
+    "Mer ström / värme"
+  ],
+  "Slå Enhance pointer precision fra for ensartet markørbevægelse.": [
+    "Disable Enhance pointer precision for consistent cursor movement.",
+    "Stäng av Förbättra pekarprecision för jämna markörrörelser."
+  ],
+  "Slår Windows' museacceleration og tærskler fra. Påvirker markøren og spil, der bruger Windows-input. Spil med raw input kan ignorere dette. Gendannelse genskaber alle tre originale museværdier.": [
+    "Disables Windows mouse acceleration and thresholds. Affects the cursor and games using Windows input. Raw-input games may ignore it. Restore brings back all three original mouse values.",
+    "Stänger av Windows musacceleration och trösklar. Påverkar markören och spel som använder Windows-inmatning. Spel med raw input kan ignorera detta. Återställning återför alla tre originalvärden."
+  ],
+  "Straks · Windows-input": [
+    "Immediate · Windows input",
+    "Direkt · Windows-inmatning"
+  ],
+  "Markørspor": [
+    "Pointer trails",
+    "Pekarspår"
+  ],
+  "Fjern visuelle spor efter musemarkøren.": [
+    "Remove visual trails behind the mouse pointer.",
+    "Ta bort visuella spår efter muspekaren."
+  ],
+  "Slår Windows' markørspor fra. Dette er en visuel præference; appen lover ikke lavere input-latency. Originalt antal spor gemmes.": [
+    "Disables Windows pointer trails. This is a visual preference; lower input latency is not promised. The original trail count is saved.",
+    "Stänger av Windows pekarspår. Detta är en visuell preferens; lägre inmatningslatens utlovas inte. Ursprungligt antal spår sparas."
+  ],
+  "Visuel præference": [
+    "Visual preference",
+    "Visuell preferens"
+  ],
+  "Neutral musehastighed": [
+    "Neutral mouse speed",
+    "Neutral mushastighet"
+  ],
+  "Sæt Windows' markørhastighed til 6/11 (værdi 10).": [
+    "Set Windows pointer speed to 6/11 (value 10).",
+    "Ställ in Windows pekarhastighet på 6/11 (värde 10)."
+  ],
+  "Indstiller Windows' pointer speed til midterpositionen. Ændrer den følte markørhastighed, ikke musens DPI eller polling rate. Raw-input-spil kan ignorere den. Din originale hastighed kan gendannes.": [
+    "Sets Windows pointer speed to the middle position. Changes cursor sensitivity, not mouse DPI or polling rate. Raw-input games may ignore it. Your original speed can be restored.",
+    "Ställer Windows pekarhastighet i mittläget. Ändrar markörkänslighet, inte musens DPI eller avläsningsfrekvens. Spel med raw input kan ignorera detta. Ursprunglig hastighet kan återställas."
+  ],
+  "Ændrer følsomhed": [
+    "Changes sensitivity",
+    "Ändrar känsligheten"
+  ],
+  "Sticky Keys-genvej": [
+    "Sticky Keys shortcut",
+    "Genväg för tröga tangenter"
+  ],
+  "Undgå aktiveringsdialogen ved gentagne tryk på Shift.": [
+    "Avoid the activation dialog when pressing Shift repeatedly.",
+    "Undvik aktiveringsdialogen vid upprepade tryck på Shift."
+  ],
+  "Deaktiverer Sticky Keys-genvejen og dens bekræftelse. Den slår ikke selve Sticky Keys-funktionen fra, hvis den allerede er aktiv. Kan påvirke din foretrukne tilgængelighedsgenvej.": [
+    "Disables the Sticky Keys shortcut and confirmation. Does not turn off Sticky Keys itself if already active. May affect your preferred accessibility shortcut.",
+    "Inaktiverar genvägen för tröga tangenter och dess bekräftelse. Stänger inte av själva funktionen om den redan är aktiv. Kan påverka din föredragna hjälpmedelsgenväg."
+  ],
+  "Tilgængelighedsgenvej": [
+    "Accessibility shortcut",
+    "Hjälpmedelsgenväg"
+  ],
+  "Toggle Keys-genvej": [
+    "Toggle Keys shortcut",
+    "Genväg för låstangenter"
+  ],
+  "Undgå aktivering ved at holde Num Lock nede.": [
+    "Avoid activation when holding Num Lock.",
+    "Undvik aktivering när Num Lock hålls ned."
+  ],
+  "Deaktiverer Toggle Keys-genvejen og bekræftelsesdialogen. Bevarer funktionens øvrige flag. Ændrer ikke FPS; relevant hvis genvejen afbryder dit spil.": [
+    "Disables the Toggle Keys shortcut and confirmation. Keeps other feature flags. Does not change FPS; useful if the shortcut interrupts your game.",
+    "Inaktiverar genvägen för låstangenter och bekräftelsedialogen. Behåller funktionens övriga flaggor. Ändrar inte FPS; relevant om genvägen avbryter ditt spel."
+  ],
+  "Slå filtrering af korte og gentagne tastetryk fra.": [
+    "Disable filtering of short and repeated keystrokes.",
+    "Stäng av filtrering av korta och upprepade tangenttryckningar."
+  ],
+  "Slår Filter Keys fra, men bevarer tids- og genvejsindstillinger. Brug ikke dette, hvis du har behov for tastaturfiltrering som tilgængelighedsfunktion. Tilføjes ikke automatisk af nogen profil.": [
+    "Disables Filter Keys but keeps timing and shortcut settings. Do not use this if you need keyboard filtering for accessibility. Never included automatically in a profile.",
+    "Stänger av filtertangenter men behåller tids- och genvägsinställningar. Använd inte detta om du behöver tangentbordsfiltrering som hjälpmedel. Ingår aldrig automatiskt i en profil."
+  ],
+  "Tilgængelighed · manuelt": [
+    "Accessibility · manual",
+    "Hjälpmedel · manuellt"
+  ],
+  "Brug uigennemsigtige Windows-overflader.": [
+    "Use opaque Windows surfaces.",
+    "Använd ogenomskinliga Windows-ytor."
+  ],
+  "Slår brugerens Windows-transparens fra. Påvirker skrivebordets udseende; ingen dokumenteret universel FPS-gevinst. Kan kræve ny login-session før alle overflader opdateres.": [
+    "Disables Windows transparency for your user. Changes desktop appearance; no documented universal FPS gain. May require signing in again for all surfaces to update.",
+    "Stänger av Windows transparens för din användare. Påverkar skrivbordets utseende; ingen dokumenterad generell FPS-vinst. Ny inloggning kan krävas för att uppdatera alla ytor."
+  ],
+  "Skrivebord · evt. log ind igen": [
+    "Desktop · may need sign-in",
+    "Skrivbord · ev. ny inloggning"
+  ],
+  "Fjern animation ved minimering og maksimering.": [
+    "Remove minimize and maximize animations.",
+    "Ta bort animationer vid minimering och maximering."
+  ],
+  "Slår Windows' minimize/maximize-animation fra gennem den understøttede system-API. En skrivebordspræference, ikke en FPS-optimering inde i spil.": [
+    "Disables Windows minimize/maximize animation through the supported system API. A desktop preference, not an in-game FPS optimization.",
+    "Stänger av Windows minimerings- och maximeringsanimation via det stödda system-API:et. En skrivbordspreferens, inte en FPS-optimering i spel."
+  ],
+  "Vis Windows-menuer uden animation.": [
+    "Show Windows menus without animation.",
+    "Visa Windows-menyer utan animation."
+  ],
+  "Deaktiverer systemets menuanimation. Apps med egne menuer kan ignorere dette. Handler om skrivebordets følelse; ingen garanteret FPS- eller latencygevinst i spil.": [
+    "Disables system menu animation. Apps with custom menus may ignore this. Changes desktop feel; no guaranteed FPS or latency improvement in games.",
+    "Stänger av systemets menyanimation. Appar med egna menyer kan ignorera detta. Påverkar skrivbordskänslan; ingen garanterad FPS- eller latensvinst i spel."
+  ],
+  "Vis system-tooltips uden overgangsanimation.": [
+    "Show system tooltips without transition animation.",
+    "Visa systemets knappbeskrivningar utan övergångsanimation."
+  ],
+  "Slår animation af systemets tooltips fra. Programmer kan have egne tooltips. Den oprindelige værdi gemmes og kan gendannes.": [
+    "Disables system tooltip animation. Apps may have their own tooltips. The original value is saved and can be restored.",
+    "Stänger av animation för systemets knappbeskrivningar. Program kan ha egna beskrivningar. Originalvärdet sparas och kan återställas."
+  ],
+  "Reducer animation i Windows' klientområder.": [
+    "Reduce animation in Windows client areas.",
+    "Minska animation i Windows klientområden."
+  ],
+  "Slår klientområde-animationer fra i programmer, der respekterer Windows-indstillingen. Reducerer bevægelse i brugerfladen; påstår ikke højere FPS i spil.": [
+    "Disables client-area animations in apps that respect the Windows setting. Reduces interface motion; does not claim higher in-game FPS.",
+    "Stänger av klientområdesanimationer i program som följer Windows-inställningen. Minskar rörelse i gränssnittet; utlovar inte högre FPS i spel."
+  ],
+  "Markørskygge": [
+    "Pointer shadow",
+    "Pekarskugga"
+  ],
+  "Fjern skyggen under Windows' musemarkør.": [
+    "Remove the shadow under the Windows mouse pointer.",
+    "Ta bort skuggan under Windows muspekare."
+  ],
+  "Slår markørskygge fra. En visuel præference, som kan ignoreres af spil med egen markør. Ingen påstået FPS-forbedring.": [
+    "Disables pointer shadow. A visual preference that games with custom cursors may ignore. No claimed FPS gain.",
+    "Stänger av pekarskuggan. En visuell preferens som kan ignoreras av spel med egen markör. Ingen utlovad FPS-förbättring."
+  ],
+  "Edge i baggrunden": [
+    "Edge in the background",
+    "Edge i bakgrunden"
+  ],
+  "Stop Edge-baggrundsapps, når browseren er lukket.": [
+    "Stop Edge background apps when the browser is closed.",
+    "Stoppa Edge-bakgrundsappar när webbläsaren är stängd."
+  ],
+  "Anvender Microsoft Edges BackgroundModeEnabled-politik for din bruger. Genstart browseren. Kan stoppe baggrundsudvidelser og notifikationer; ændrer ikke åbne faner. Eksisterende organisationspolitik kan have forrang.": [
+    "Applies Microsoft Edge's BackgroundModeEnabled policy for your user. Restart the browser. May stop background extensions and notifications; does not change open tabs. Organization policy may take precedence.",
+    "Tillämpar Microsoft Edges BackgroundModeEnabled-policy för din användare. Starta om webbläsaren. Kan stoppa bakgrundstillägg och aviseringar; ändrar inte öppna flikar. Organisationens policy kan ha företräde."
+  ],
+  "Genstart Edge": [
+    "Restart Edge",
+    "Starta om Edge"
+  ],
+  "Undgå at Edge forudstarter browserprocesser.": [
+    "Prevent Edge from prelaunching browser processes.",
+    "Förhindra att Edge förstartar webbläsarprocesser."
+  ],
+  "Slår Edge Startup Boost fra via brugerpolitik. Kan reducere forhåndsstartet baggrundsaktivitet, men gøre browserens første opstart langsommere. Kræver browsergenstart. Ingen garanteret FPS-gevinst.": [
+    "Disables Edge Startup Boost through user policy. May reduce prelaunched background activity but slow the first browser start. Requires restarting the browser. No guaranteed FPS gain.",
+    "Stänger av Edge Startup Boost via användarpolicy. Kan minska förstartad bakgrundsaktivitet men göra webbläsarens första start långsammare. Kräver omstart av webbläsaren. Ingen garanterad FPS-vinst."
+  ],
+  "Langsommere browserstart": [
+    "Slower browser startup",
+    "Långsammare webbläsarstart"
+  ],
+  "Chrome i baggrunden": [
+    "Chrome in the background",
+    "Chrome i bakgrunden"
+  ],
+  "Stop Chrome-baggrundsapps, når browseren er lukket.": [
+    "Stop Chrome background apps when the browser is closed.",
+    "Stoppa Chrome-bakgrundsappar när webbläsaren är stängd."
+  ],
+  "Anvender Chromes BackgroundModeEnabled-politik for din bruger. Genstart Chrome. Baggrundsudvidelser og notifikationer kan stoppe. Organisationsstyring kan overstyre politikken. Åbne faner afsluttes ikke.": [
+    "Applies Chrome's BackgroundModeEnabled policy for your user. Restart Chrome. Background extensions and notifications may stop. Organization management can override the policy. Open tabs are not closed.",
+    "Tillämpar Chromes BackgroundModeEnabled-policy för din användare. Starta om Chrome. Bakgrundstillägg och aviseringar kan upphöra. Organisationsstyrning kan åsidosätta policyn. Öppna flikar stängs inte."
+  ],
+  "Genstart Chrome": [
+    "Restart Chrome",
+    "Starta om Chrome"
+  ],
+  "Søgeforslag fra nettet": [
+    "Web search suggestions",
+    "Sökförslag från webben"
+  ],
+  "Fravælg webforslag i understøttet Windows-søgning.": [
+    "Opt out of web suggestions in supported Windows search.",
+    "Välj bort webbförslag i Windows-sökning som stöds."
+  ],
+  "Sætter DisableSearchBoxSuggestions-politikken for din bruger. Virkningen varierer med Windows-version, udgave og systempolitik. Log ind igen. Påvirker søgeoplevelsen; ikke en FPS-optimering.": [
+    "Sets DisableSearchBoxSuggestions policy for your user. Effect varies by Windows version, edition and system policy. Sign in again. Changes search experience; not an FPS optimization.",
+    "Ställer in DisableSearchBoxSuggestions-policy för din användare. Effekten varierar med Windows-version, utgåva och systempolicy. Logga in igen. Påverkar sökupplevelsen; inte en FPS-optimering."
+  ],
+  "Versionsafhængig · log ind igen": [
+    "Version dependent · sign in again",
+    "Versionsberoende · logga in igen"
+  ],
+  "Windows reklame-id": [
+    "Windows advertising ID",
+    "Windows reklam-ID"
+  ],
+  "Slå brug af Windows-reklame-id fra for din bruger.": [
+    "Disable Windows advertising ID for your user.",
+    "Stäng av Windows reklam-ID för din användare."
+  ],
+  "Deaktiverer brugerens reklame-id-indstilling. Det slår ikke alle reklamer eller Windows-telemetri fra. Kan påvirke personlig tilpasning af annoncer; ikke en FPS-optimering.": [
+    "Disables your user's advertising ID setting. Does not disable all advertising or Windows telemetry. May affect ad personalization; not an FPS optimization.",
+    "Stänger av användarens reklam-ID-inställning. Stänger inte av all reklam eller Windows-telemetri. Kan påverka personliga annonser; inte en FPS-optimering."
+  ],
+  "Privatliv · brugerindstilling": [
+    "Privacy · user setting",
+    "Integritet · användarinställning"
+  ],
+  "Personlige anbefalinger": [
+    "Personalized recommendations",
+    "Anpassade rekommendationer"
+  ],
+  "Fravælg tilpassede oplevelser baseret på diagnosedata.": [
+    "Opt out of tailored experiences based on diagnostic data.",
+    "Välj bort anpassade upplevelser baserade på diagnostikdata."
+  ],
+  "Slår brugerens tailored experiences-indstilling fra. Reducerer denne form for personlig tilpasning, men deaktiverer ikke al diagnostik eller telemetri. Ingen påstået FPS-forbedring.": [
+    "Disables your user's tailored experiences setting. Reduces this type of personalization but does not disable all diagnostics or telemetry. No claimed FPS gain.",
+    "Stänger av användarens inställning för anpassade upplevelser. Minskar denna typ av anpassning men stänger inte av all diagnostik eller telemetri. Ingen utlovad FPS-förbättring."
+  ],
+  "GPU-præference": [
+    "GPU preference",
+    "GPU-preferens"
+  ],
+  "Bed Windows om højtydende GPU til det valgte spil.": [
+    "Ask Windows to use the high-performance GPU for the selected game.",
+    "Be Windows använda högpresterande GPU för det valda spelet."
+  ],
+  "Gemmer GpuPreference=2 for den valgte .exe og bevarer andre GPU-præferencer. Nyttigst på systemer med flere GPU'er. Driver, spil og systempolitik kan overstyre ønsket. Genstart spillet. Kræver at du vælger spillets rigtige .exe.": [
+    "Saves GpuPreference=2 for the selected .exe and keeps other GPU preferences. Most useful with multiple GPUs. Drivers, games and system policy can override it. Restart the game. Select the game's actual .exe.",
+    "Sparar GpuPreference=2 för vald .exe och behåller andra GPU-preferenser. Mest användbart med flera GPU:er. Drivrutin, spel och systempolicy kan åsidosätta önskemålet. Starta om spelet. Välj spelets riktiga .exe."
+  ],
+  "Pr. .exe · genstart spil": [
+    "Per .exe · restart game",
+    "Per .exe · starta om spelet"
+  ],
+  "Fullscreen A/B-test": [
+    "Fullscreen A/B test",
+    "Fullskärm A/B-test"
+  ],
+  "Test spillet med fullscreen-optimeringer slået fra.": [
+    "Test the game with fullscreen optimizations disabled.",
+    "Testa spelet med fullskärmsoptimeringar avstängda."
+  ],
+  "Tilføjer DISABLEDXMAXIMIZEDWINDOWEDMODE kun til den valgte .exe, mens eksisterende kompatibilitetsflag bevares. Kan forringe ydelse, VRR eller Alt-Tab. Anvend kun som målt A/B-test; medtages ikke i en profil. Genstart spillet.": [
+    "Adds DISABLEDXMAXIMIZEDWINDOWEDMODE only to the selected .exe while keeping existing compatibility flags. May worsen performance, VRR or Alt-Tab. Use only as a measured A/B test; excluded from profiles. Restart the game.",
+    "Lägger till DISABLEDXMAXIMIZEDWINDOWEDMODE bara för vald .exe och behåller befintliga kompatibilitetsflaggor. Kan försämra prestanda, VRR eller Alt-Tab. Använd bara som uppmätt A/B-test; ingår inte i profiler. Starta om spelet."
+  ],
+  "Eksperiment · kan forringe": [
+    "Experimental · may worsen results",
+    "Experiment · kan försämra"
+  ],
+  "Delvis gendannelse; resterende: ": [
+    "Partial restore; remaining: ",
+    "Delvis återställt; återstående: "
+  ],
+  "Alle gemte indstillinger gendannet": [
+    "All saved settings restored",
+    "Alla sparade inställningar återställda"
+  ],
+  "Opstart fjernet: ": [
+    "Startup removed: ",
+    "Autostart borttagen: "
+  ],
+  "Opstart gendannet: ": [
+    "Startup restored: ",
+    "Autostart återställd: "
+  ],
+  "CPU ukendt": [
+    "Unknown CPU",
+    "Okänd CPU"
+  ],
+  "GPU ukendt": [
+    "Unknown GPU",
+    "Okänd GPU"
+  ],
+  " logiske processorer  |  ": [
+    " logical processors  |  ",
+    " logiska processorer  |  "
+  ],
+  " GB RAM (": [
+    " GB RAM (",
+    " GB RAM ("
+  ],
+  "% i brug)\r\n": [
+    "% in use)\r\n",
+    "% i bruk)\r\n"
+  ],
+  " processer · ": [
+    " processes · ",
+    " processer · "
+  ],
+  " tråde · ": [
+    " threads · ",
+    " trådar · "
+  ],
+  "Historik kunne ikke læses.\r\n": [
+    "History could not be read.\r\n",
+    "Historiken kunde inte läsas.\r\n"
+  ],
+  "Windows PowerShell/Appx er ikke tilgængeligt på denne maskine. Funktionen kræver en understøttet Windows 11-installation.": [
+    "Windows PowerShell/Appx is unavailable on this machine. This feature requires a supported Windows 11 installation.",
+    "Windows PowerShell/Appx är inte tillgängligt på denna dator. Funktionen kräver en stödd Windows 11-installation."
+  ],
+  "Nyhedsappen. Fjernelse stopper ikke nødvendigvis Widgets.": [
+    "News app. Removing it does not necessarily stop Widgets.",
+    "Nyhetsappen. Borttagning stoppar inte nödvändigtvis Widgets."
+  ],
+  "Vejrappen. Fjernelse ændrer ikke Windows' netværksfunktioner.": [
+    "Weather app. Removing it does not change Windows networking.",
+    "Väderappen. Borttagning ändrar inte Windows nätverksfunktioner."
+  ],
+  "Kortspil. Xbox- og gaming-tjenester ændres ikke.": [
+    "Card games. Xbox and gaming services are not changed.",
+    "Kortspel. Xbox- och speltjänster ändras inte."
+  ],
+  "Microsoft 365-startapp": [
+    "Microsoft 365 launcher",
+    "Microsoft 365-startapp"
+  ],
+  "Startappen til Microsoft 365. De klassiske Word-/Excel-programmer afinstalleres ikke.": [
+    "Microsoft 365 launcher. Classic Word and Excel programs are not uninstalled.",
+    "Startappen för Microsoft 365. Klassiska Word- och Excel-program avinstalleras inte."
+  ],
+  "Telefonintegration og tilhørende notifikationer kan ophøre.": [
+    "Phone integration and related notifications may stop.",
+    "Telefonintegration och tillhörande aviseringar kan upphöra."
+  ],
+  "Windows' hjælpeapp. Fejlfinding gennem denne app bliver utilgængelig.": [
+    "Windows help app. Troubleshooting through this app becomes unavailable.",
+    "Windows hjälpapp. Felsökning genom denna app blir otillgänglig."
+  ],
+  "Appen med introduktion og tips til Windows.": [
+    "Windows introduction and tips app.",
+    "Appen med introduktion och tips för Windows."
+  ],
+  "Feedback-appen. Dette deaktiverer ikke al Windows-telemetri.": [
+    "Feedback app. Does not disable all Windows telemetry.",
+    "Feedback-appen. Detta stänger inte av all Windows-telemetri."
+  ],
+  "Videoeditor. Gem og eksportér projekter før fjernelse.": [
+    "Video editor. Save and export projects before removal.",
+    "Videoredigerare. Spara och exportera projekt före borttagning."
+  ],
+  "Overblik": [
+    "Overview",
+    "Översikt"
+  ],
+  "Indstillinger": [
+    "Settings",
+    "Inställningar"
+  ],
+  "Fokus": [
+    "Focus",
+    "Fokus"
+  ],
+  "Gendannelse": [
+    "Restore",
+    "Återställning"
+  ],
+  "Alle": [
+    "All",
+    "Alla"
+  ],
+  "Baggrund": [
+    "Background",
+    "Bakgrund"
+  ],
+  "Privatliv": [
+    "Privacy",
+    "Integritet"
+  ],
+  "Spilprofil": [
+    "Game profile",
+    "Spelprofil"
+  ],
+  "Anvend": [
+    "Apply",
+    "Använd"
+  ],
+  "Gamingprofil": [
+    "Gaming profile",
+    "Spelprofil"
+  ],
+  "Inputprofil": [
+    "Input profile",
+    "Inmatningsprofil"
+  ],
+  "Fokusprofil": [
+    "Focus profile",
+    "Fokusprofil"
+  ],
+  "Browser-baggrundsaktivitet": [
+    "Browser background activity",
+    "Webbläsaraktivitet i bakgrunden"
+  ],
+  "Forrige": [
+    "Previous",
+    "Föregående"
+  ],
+  "Gendan": [
+    "Restore",
+    "Återställ"
+  ],
+  "Opstart": [
+    "Startup",
+    "Autostart"
+  ],
+  "Windows-apps": [
+    "Windows apps",
+    "Windows-appar"
+  ],
+  "Opdater": [
+    "Refresh",
+    "Uppdatera"
+  ],
+  "Sessionkontrol": [
+    "Session controls",
+    "Sessionskontroll"
+  ],
+  "Annuller": [
+    "Cancel",
+    "Avbryt"
+  ],
+  "Tekstfil": [
+    "Text file",
+    "Textfil"
+  ],
+  "Windows-program": [
+    "Windows application",
+    "Windows-program"
+  ],
+  "Baggrundsoptagelse": [
+    "Background recording",
+    "Bakgrundsinspelning"
+  ],
+  "Museacceleration": [
+    "Mouse acceleration",
+    "Musacceleration"
+  ],
+  "Gennemsigtighed": [
+    "Transparency",
+    "Transparens"
+  ],
+  "Vinduesanimationer": [
+    "Window animations",
+    "Fönsteranimationer"
+  ],
+  "Skrivebordseffekt": [
+    "Desktop effect",
+    "Skrivbordseffekt"
+  ],
+  "Menuanimationer": [
+    "Menu animations",
+    "Menyanimationer"
+  ],
+  "Tooltip-animationer": [
+    "Tooltip animations",
+    "Knappbeskrivningsanimationer"
+  ],
+  "Indholdsanimationer": [
+    "Content animations",
+    "Innehållsanimationer"
+  ],
+  "Sprog": [
+    "Language",
+    "Språk"
+  ],
+  "Vælg sprog": [
+    "Choose language",
+    "Välj språk"
+  ],
+  "Skift sprog med det samme. Dit valg gemmes på denne PC.": [
+    "Switch language instantly. Your choice is saved on this PC.",
+    "Byt språk direkt. Ditt val sparas på denna dator."
+  ],
+  "Kunne ikke gemme sprogvalget. Prøv igen.": [
+    "Could not save the language preference. Try again.",
+    "Kunde inte spara språkvalet. Försök igen."
+  ],
+  "Gaming": [
+    "Gaming",
+    "Gaming"
+  ],
+  "Input": [
+    "Input",
+    "Inmatning"
+  ],
+  "Windows": [
+    "Windows",
+    "Windows"
+  ],
+  "Windows Game Mode": [
+    "Windows Game Mode",
+    "Windows spelläge"
+  ],
+  "Filter Keys": [
+    "Filter Keys",
+    "Filtertangenter"
+  ],
+  "Edge Startup Boost": [
+    "Edge Startup Boost",
+    "Edge Startup Boost"
+  ]
+}

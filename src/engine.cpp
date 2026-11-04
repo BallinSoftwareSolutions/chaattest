@@ -1,4 +1,5 @@
 #include "engine.h"
+#include "localization.h"
 #include <powrprof.h>
 #include <psapi.h>
 #include <objbase.h>
@@ -260,8 +261,8 @@ std::wstring hardwareSummary(){
  DISPLAY_DEVICEW display{};display.cb=sizeof display;std::wstring gpu=L"GPU ukendt";
  for(DWORD i=0;EnumDisplayDevicesW(nullptr,i,&display,0);++i){if(display.StateFlags&DISPLAY_DEVICE_PRIMARY_DEVICE){gpu=display.DeviceString;break;}display.cb=sizeof display;}
  DEVMODEW mode{};mode.dmSize=sizeof mode;EnumDisplaySettingsW(nullptr,ENUM_CURRENT_SETTINGS,&mode);
- std::wostringstream out;out<<cpu<<L"\r\n"<<sys.dwNumberOfProcessors<<L" logiske processorer  |  "<<(mem.ullTotalPhys/(1024ull*1024*1024))<<L" GB RAM ("<<mem.dwMemoryLoad<<L"% i brug)\r\n"<<gpu<<L"\r\n"<<mode.dmPelsWidth<<L" × "<<mode.dmPelsHeight<<L"  ·  "<<mode.dmDisplayFrequency<<L" Hz";
- PERFORMANCE_INFORMATION performance{};performance.cb=sizeof performance;if(GetPerformanceInfo(&performance,sizeof performance))out<<L"\r\n"<<performance.ProcessCount<<L" processer · "<<performance.ThreadCount<<L" tråde · "<<performance.HandleCount<<L" handles";
+ std::wostringstream out;out<<l10n::text(cpu)<<L"\r\n"<<sys.dwNumberOfProcessors<<l10n::text(L" logiske processorer  |  ")<<(mem.ullTotalPhys/(1024ull*1024*1024))<<l10n::text(L" GB RAM (")<<mem.dwMemoryLoad<<l10n::text(L"% i brug)\r\n")<<l10n::text(gpu)<<L"\r\n"<<mode.dmPelsWidth<<L" × "<<mode.dmPelsHeight<<L"  ·  "<<mode.dmDisplayFrequency<<L" Hz";
+ PERFORMANCE_INFORMATION performance{};performance.cb=sizeof performance;if(GetPerformanceInfo(&performance,sizeof performance))out<<L"\r\n"<<performance.ProcessCount<<l10n::text(L" processer · ")<<performance.ThreadCount<<l10n::text(L" tråde · ")<<performance.HandleCount<<L" handles";
  return out.str();
 }
 void log(const std::wstring& message){

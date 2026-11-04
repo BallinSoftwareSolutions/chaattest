@@ -1,8 +1,14 @@
-# Maxifying 0.5 · Performance Studio
+# Maxifying 0.6 · Performance Studio
 
 **[Download Maxifying.exe](https://github.com/BallinSoftwareSolutions/chaattest/raw/refs/heads/gametune-download/downloads/Maxifying.exe)**
 
 Hvis download ikke starter: [åbn filen på GitHub](https://github.com/BallinSoftwareSolutions/chaattest/blob/gametune-download/downloads/Maxifying.exe), og klik på pilen **Download raw file**. Log ind på GitHub, hvis repository'et er privat. Find derefter filen i Downloads på din Windows 11-pc.
+
+## Nyt i 0.6
+
+- **Dansk, English og Svenska:** åbn sprogknappen nederst til højre. Navigation, featureforklaringer, dialoger og advarsler skifter uden genstart. Valget gemmes under din Windows-bruger. Egne filnavne, programnavne, Windows-fejl og tidligere historik beholdes som de er.
+- **Scroll-rendering:** tekstlayout og målinger genbruges i en begrænset cache. Scroll springer den ekstra sidekomposition over, og opdateringsintervallet følger skærmens rapporterede Hz. Nye hjulinput reagerer hurtigere, og hardwareinspektion køres ikke længere hvert andet sekund. Den faktiske oplevelse skal stadig vurderes på Windows 11 og din skærm.
+- **Nyt ikon:** et symbol i sølv og blå på mørk baggrund erstatter det grønne M i både programfil, proceslinje og appens header.
 
 ## Nyt i 0.5
 
