@@ -1,8 +1,19 @@
-# Maxifying 0.6 · Performance Studio
+# Maxifying 0.7 · Performance Studio
 
 **[Download Maxifying.exe](https://github.com/BallinSoftwareSolutions/chaattest/raw/refs/heads/gametune-download/downloads/Maxifying.exe)**
 
 Hvis download ikke starter: [åbn filen på GitHub](https://github.com/BallinSoftwareSolutions/chaattest/blob/gametune-download/downloads/Maxifying.exe), og klik på pilen **Download raw file**. Log ind på GitHub, hvis repository'et er privat. Find derefter filen i Downloads på din Windows 11-pc.
+
+## Nyt i 0.7 · lettere at komme i gang
+
+- **Start her:** en fast tretrins-guide på forsiden: vælg spil, gennemse gamingprofilen, og sammenlign resultater. Procesantal vises som systemstatus frem for et optimeringsmål.
+- **Gennemse før ændring:** individuelle indstillinger viser tydeligt, om de er anvendt med en gemt original, allerede indstillet i Windows, med gemt original uden anvendt målværdi eller utilgængelige. Knapperne siger Gennemse/Gendan i stedet for en tvetydig on/off-switch. Alle individuelle ændringer får en forklaring før anvendelse.
+- **Profiler med forhåndskontrol:** profiler viser kun nødvendige ændringer, springer utilgængelige og allerede indstillede værdier over og genkontrollerer dem ved anvendelse. Alle fire profiler findes under Indstillinger → Profiler.
+- **Gemte ændringer:** et filter under Indstillinger og en genvej fra forsiden/Gendannelse viser indstillinger med originale backups. Listen dækker Windows og det aktuelt valgte spil; Gendan alle omfatter også gamle spil og opstartsposter.
+- **Seneste spil og start:** Spilprofil husker seks valgte .exe-filer. Vælg en tidligere fil eller start det valgte spil direkte. Filen kontrolleres før start. Spil, der kræver Steam eller en anden launcher, skal eventuelt startes derfra. Der ændres ikke automatisk prioritet eller strømindstillinger ved start.
+- **Målinger pr. spil:** indtast gennemsnitlig FPS og 1% low før/efter, tilføj testscene/grafiknoter og gem resultatet lokalt for spillet. Procentforskelle inkluderer negative resultater. Komma/punktum accepteres; 1% low må ikke overstige gennemsnittet. Resultaterne kan eksporteres med rapporten. Appen måler **ikke** FPS automatisk; brug samme spils benchmark eller et separat måleværktøj.
+- **Beskyt indtastede resultater:** et ikke-gemt mærke og en advarsel før spilskift/lukning hjælper med at undgå datatab. Egne målinger og seneste spil er adskilt fra backups af Windows-indstillinger.
+- Alle nye tekster findes på dansk, engelsk og svensk. Den lokale sprogknap er fortsat øverst til højre.
 
 ## Nyt i 0.6
 

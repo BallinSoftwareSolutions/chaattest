@@ -1302,5 +1302,301 @@
   "Edge Startup Boost": [
     "Edge Startup Boost",
     "Edge Startup Boost"
+  ],
+  "Kun disse nødvendige ændringer bliver anvendt:\n\n": [
+    "Only these necessary changes will be applied:\n\n",
+    "Endast dessa nödvändiga ändringar tillämpas:\n\n"
+  ],
+  " allerede indstillet · ": [
+    " already set · ",
+    " redan inställda · "
+  ],
+  " ikke tilgængelige (springes over).\n": [
+    " unavailable (skipped).\n",
+    " inte tillgängliga (hoppas över).\n"
+  ],
+  "Genstart browserne. Baggrundsudvidelser og notifikationer kan stoppe. Åbne apps lukkes ikke.": [
+    "Restart browsers. Background extensions and notifications may stop. Open apps are not closed.",
+    "Starta om webbläsarna. Bakgrundstillägg och aviseringar kan upphöra. Öppna appar stängs inte."
+  ],
+  "Ændrer mus og tilgængelighedsgenveje. Raw-input-spil kan ignorere musen. Gennemse hver indstilling under Indstillinger ved behov.": [
+    "Changes mouse behavior and accessibility shortcuts. Raw-input games may ignore mouse settings. Review individual settings if needed.",
+    "Ändrar musbeteende och hjälpmedelsgenvägar. Spel med raw input kan ignorera musinställningar. Granska enskilda inställningar vid behov."
+  ],
+  "Genstart spillet efter ændringerne. Mål før og efter; højere FPS er ikke garanteret.": [
+    "Restart the game after changes. Measure before and after; higher FPS is not guaranteed.",
+    "Starta om spelet efter ändringarna. Mät före och efter; högre FPS garanteras inte."
+  ],
+  "Ingen nødvendige ændringer i denne profil.\n\n": [
+    "No necessary changes in this profile.\n\n",
+    "Inga nödvändiga ändringar i denna profil.\n\n"
+  ],
+  "Gendan: ": [
+    "Restore: ",
+    "Återställ: "
+  ],
+  "Gennemse: ": [
+    "Review: ",
+    "Granska: "
+  ],
+  "Genskaber den gemte originalværdi. Genstart spillet eller appen bagefter, hvis indstillingen kræver det.": [
+    "Restores the saved original value. Restart the game or app afterwards if the setting requires it.",
+    "Återställer det sparade originalvärdet. Starta om spelet eller appen efteråt om inställningen kräver det."
+  ],
+  "Ikke tilgængelig": [
+    "Unavailable",
+    "Inte tillgänglig"
+  ],
+  "Anvendt · original gemt": [
+    "Applied · original saved",
+    "Tillämpad · original sparat"
+  ],
+  "Allerede indstillet i Windows": [
+    "Already set in Windows",
+    "Redan inställt i Windows"
+  ],
+  "Klar til ændring": [
+    "Ready to change",
+    "Redo att ändras"
+  ],
+  "Indstillet": [
+    "Set",
+    "Inställt"
+  ],
+  "Gennemse": [
+    "Review",
+    "Granska"
+  ],
+  "START HER": [
+    "START HERE",
+    "BÖRJA HÄR"
+  ],
+  "Gør klar til dit næste spil.": [
+    "Get ready for your next game.",
+    "Gör dig redo för nästa spel."
+  ],
+  "Vælg dit spil, gennemse ændringerne og mål resultatet. Intet ændres automatisk.": [
+    "Choose your game, review the changes and measure the result. Nothing changes automatically.",
+    "Välj ditt spel, granska ändringarna och mät resultatet. Ingenting ändras automatiskt."
+  ],
+  "Vælg dit spil": [
+    "Choose your game",
+    "Välj ditt spel"
+  ],
+  "Gennemse gamingprofil": [
+    "Review gaming profile",
+    "Granska spelprofilen"
+  ],
+  "Sammenlign dit resultat": [
+    "Compare your results",
+    "Jämför dina resultat"
+  ],
+  "Vælg spillets rigtige .exe for indstillinger pr. spil.": [
+    "Choose the game's actual .exe for per-game settings.",
+    "Välj spelets riktiga .exe för inställningar per spel."
+  ],
+  "Game Mode og baggrundsoptagelse. Se planen før du anvender den.": [
+    "Game Mode and background recording. Preview the plan before applying it.",
+    "Spelläge och bakgrundsinspelning. Förhandsgranska planen innan du tillämpar den."
+  ],
+  "Gem dine egne FPS-målinger fra samme scene og grafikindstillinger.": [
+    "Save your own FPS readings from the same scene and graphics settings.",
+    "Spara dina egna FPS-värden från samma scen och grafikinställningar."
+  ],
+  "Vælg spil": [
+    "Choose game",
+    "Välj spel"
+  ],
+  "Skift spil": [
+    "Change game",
+    "Byt spel"
+  ],
+  "Vis ændringer": [
+    "Preview changes",
+    "Visa ändringar"
+  ],
+  "Åbn målinger": [
+    "Open results",
+    "Öppna mätningar"
+  ],
+  "DIN VEJ TILBAGE": [
+    "YOUR WAY BACK",
+    "DIN VÄG TILLBAKA"
+  ],
+  "gemte originaler": [
+    "saved originals",
+    "sparade original"
+  ],
+  "Gennemse gemte ændringer": [
+    "Review saved changes",
+    "Granska sparade ändringar"
+  ],
+  "SYSTEMSTATUS · IKKE EN FPS-SCORE": [
+    "SYSTEM STATUS · NOT AN FPS SCORE",
+    "SYSTEMSTATUS · INGEN FPS-POÄNG"
+  ],
+  "RAM i brug": [
+    "RAM in use",
+    "RAM i bruk"
+  ],
+  "Før du ændrer noget": [
+    "Before you change anything",
+    "Innan du ändrar något"
+  ],
+  "En indstilling ad gangen. Test samme spilscene. Gendan hvis resultatet bliver dårligere.": [
+    "One setting at a time. Test the same game scene. Restore if results get worse.",
+    "En inställning i taget. Testa samma spelscen. Återställ om resultatet blir sämre."
+  ],
+  "Sådan bruger du Maxifying": [
+    "How to use Maxifying",
+    "Så använder du Maxifying"
+  ],
+  "Vis alle indstillinger": [
+    "Show all settings",
+    "Visa alla inställningar"
+  ],
+  "Vis kun gemte ændringer": [
+    "Show saved changes only",
+    "Visa bara sparade ändringar"
+  ],
+  "Ingen gemte ændringer for Windows og det valgte spil.": [
+    "No saved changes for Windows and the selected game.",
+    "Inga sparade ändringar för Windows och det valda spelet."
+  ],
+  "Windows understøtter ikke denne indstilling.": [
+    "Windows does not support this setting.",
+    "Windows stöder inte denna inställning."
+  ],
+  "Målinger": [
+    "Results",
+    "Mätningar"
+  ],
+  "Dine målinger · indtastes manuelt": [
+    "Your results · entered manually",
+    "Dina mätningar · anges manuellt"
+  ],
+  "Vælg et spil først. Hvert spil har sine egne gemte målinger.": [
+    "Choose a game first. Each game has its own saved results.",
+    "Välj ett spel först. Varje spel har sina egna sparade mätningar."
+  ],
+  "Før ændringer": [
+    "Before changes",
+    "Före ändringar"
+  ],
+  "Efter ændringer": [
+    "After changes",
+    "Efter ändringar"
+  ],
+  "Gennemsnitlig FPS": [
+    "Average FPS",
+    "Genomsnittlig FPS"
+  ],
+  "Testscene / grafikindstillinger": [
+    "Test scene / graphics settings",
+    "Testscen / grafikinställningar"
+  ],
+  "Fx samme bane, 1080p, samme grafik og testlængde": [
+    "E.g. same map, 1080p, same graphics and test length",
+    "T.ex. samma bana, 1080p, samma grafik och testlängd"
+  ],
+  "Sammenlign samme test": [
+    "Compare the same test",
+    "Jämför samma test"
+  ],
+  "Brug spillets benchmark eller et måleværktøj. 1% low beskriver de langsomme frames. Maxifying måler ikke FPS automatisk.": [
+    "Use the game's benchmark or a measurement tool. 1% low describes slow frames. Maxifying does not measure FPS automatically.",
+    "Använd spelets benchmark eller ett mätverktyg. 1% low beskriver långsamma bildrutor. Maxifying mäter inte FPS automatiskt."
+  ],
+  " gennemsnit": [
+    " average",
+    " genomsnitt"
+  ],
+  "Indtast alle fire tal. 1% low må ikke overstige gennemsnittet. Brug punktum eller komma.": [
+    "Enter all four values. 1% low must not exceed the average. Use a dot or comma.",
+    "Ange alla fyra värden. 1% low får inte överstiga genomsnittet. Använd punkt eller komma."
+  ],
+  "Gem målinger for spillet": [
+    "Save results for this game",
+    "Spara mätningar för spelet"
+  ],
+  "Seneste spil": [
+    "Recent games",
+    "Senaste spel"
+  ],
+  "Start spil": [
+    "Launch game",
+    "Starta spel"
+  ],
+  "Indtast fire gyldige FPS-tal, og vælg et spil først.": [
+    "Enter four valid FPS values and choose a game first.",
+    "Ange fyra giltiga FPS-värden och välj ett spel först."
+  ],
+  "Dine indtastede målinger er gemt for dette spil.": [
+    "Your entered results are saved for this game.",
+    "Dina angivna mätningar har sparats för detta spel."
+  ],
+  "Spilfilen findes ikke længere. Vælg den igen fra dens nye placering.": [
+    "The game file no longer exists. Choose it again from its new location.",
+    "Spelfilen finns inte längre. Välj den igen från dess nya plats."
+  ],
+  "Startanmodning sendt. Nogle spil kræver deres egen launcher.": [
+    "Launch request sent. Some games require their own launcher.",
+    "Startbegäran skickad. Vissa spel kräver sin egen launcher."
+  ],
+  "Manuelt indtastede målinger": [
+    "Manually entered results",
+    "Manuellt angivna mätningar"
+  ],
+  "1. Vælg spillet og luk det før ændringer.\n2. Gennemse og anvend kun de indstillinger, du ønsker.\n3. Genstart spillet og test samme scene.\n4. Sammenlign dine målte FPS-tal under Målinger.\n5. Gendan gemte ændringer hvis resultatet bliver dårligere.\n\nAllerede indstillet betyder, at Windows havde værdien i forvejen. Maxifying kan kun gendanne originaler, som appen selv har gemt. Afinstallerede apps og deres data gendannes ikke.": [
+    "1. Choose the game and close it before making changes.\n2. Review and apply only the settings you want.\n3. Restart the game and test the same scene.\n4. Compare your measured FPS under Results.\n5. Restore saved changes if results get worse.\n\nAlready set means Windows had that value before. Maxifying can only restore originals it saved itself. Uninstalled apps and their data are not restored.",
+    "1. Välj spelet och stäng det före ändringar.\n2. Granska och tillämpa bara de inställningar du vill ha.\n3. Starta om spelet och testa samma scen.\n4. Jämför uppmätta FPS under Mätningar.\n5. Återställ sparade ändringar om resultatet blir sämre.\n\nRedan inställt betyder att Windows redan hade värdet. Maxifying kan bara återställa original som appen själv sparat. Avinstallerade appar och deras data återställs inte."
+  ],
+  "Åbn spilprofil": [
+    "Open game profile",
+    "Öppna spelprofil"
+  ],
+  "Profiler": [
+    "Profiles",
+    "Profiler"
+  ],
+  "Vælg profil": [
+    "Choose a profile",
+    "Välj profil"
+  ],
+  "Målingerne er ikke gemt": [
+    "Your results are not saved",
+    "Dina mätningar är inte sparade"
+  ],
+  "Annuller og gem under Målinger, eller kassér de indtastede ændringer før du skifter spil.": [
+    "Cancel and save under Results, or discard the entered changes before switching games.",
+    "Avbryt och spara under Mätningar, eller kasta de angivna ändringarna innan du byter spel."
+  ],
+  "Kassér og skift spil": [
+    "Discard and switch game",
+    "Kasta och byt spel"
+  ],
+  "Annuller og gem under Målinger, eller kassér de indtastede ændringer før du lukker.": [
+    "Cancel and save under Results, or discard the entered changes before closing.",
+    "Avbryt och spara under Mätningar, eller kasta de angivna ändringarna innan du stänger."
+  ],
+  "Kassér og luk": [
+    "Discard and close",
+    "Kasta och stäng"
+  ],
+  "Ikke gemt": [
+    "Not saved",
+    "Inte sparat"
+  ],
+  "Gemte ændringer": [
+    "Saved changes",
+    "Sparade ändringar"
+  ],
+  "Alle indstillinger": [
+    "All settings",
+    "Alla inställningar"
+  ],
+  "Original gemt · ikke anvendt": [
+    "Original saved · not applied",
+    "Original sparat · inte tillämpat"
   ]
 }

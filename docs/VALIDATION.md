@@ -1,6 +1,18 @@
-# Validation · Maxifying 0.6
+# Validation · Maxifying 0.7
 
 The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10; Wine outcomes do not establish native Windows behavior or gaming performance.
+
+## First-user review and 0.7
+
+The first-user review found unclear switch semantics, a process-count hero that implied a performance target, no visible starting path, redundant profile application, and no convenient view of originals saved for restoration. The dashboard, explicit setting states, profile preflight and saved-only filter address those issues.
+
+Added recent-game selection and explicit executable launch, plus per-game manually entered before/after FPS/1% low records with notes, validation, negative deltas, export and unsaved-edit guards. These are user-entered values, not measured game telemetry or proof of causality. The existing 23 settings, four profiles and restore primitives remain available.
+
+- The new pure experience test checks truthful state classification, profile selection, invalid/implausible measurement rejection, regressions, recent-list limits/deduplication and stable per-game IDs.
+- GUI checks roundtrip results and recent games through the real registry helpers in the isolated Wine prefix, then restore original values. They verify review before any individual tweak, saved-only filtering, keyboard access to all profiles and cancellation of the unsaved-game-switch warning.
+- The catalog now has 400 unique three-language entries. Generated source and editable UTF-8 catalog are both checked in.
+- GUI tests do not launch a game, apply profiles or uninstall apps. Native Windows executable-launch/launcher compatibility, actual game performance and native perceived frame pacing remain unverified.
+- Screenshot capture now requests a fresh paint and compositor/GDI synchronization before reading pixels, so queued transition frames are not mistaken for settled screens.
 
 ## Language control placement
 
@@ -49,7 +61,7 @@ The target is Windows 11 x64. This task uses Linux cross-compilation and Wine 10
 
 ## Verified
 
-- CMake configured and built the application, resources and test target successfully. CTest ran the Windows test executable through Wine: **5/5 tests passed**.
+- CMake configured and built the application, resources and test target successfully. CTest ran the Windows test executable through Wine: **6/6 tests passed**.
 
 - Release executable built with MinGW, C++17, `-Wall -Wextra -Werror`, static C++ runtime, embedded icon, manifest and version information.
 - Synthetic registry tests: missing original value, original binary data/type, repeated changes retaining the first baseline, repeated restore, backup collision rejection, GPU preference merge preserving unrelated tokens, fullscreen flags preserving existing compatibility flags, missing game executable rejection before backup, and unique/described feature catalog.

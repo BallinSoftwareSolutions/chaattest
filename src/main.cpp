@@ -3,6 +3,7 @@
 #include "engine.h"
 #include "motion.h"
 #include "localization.h"
+#include "experience.h"
 #include "ui.h"
 #include "ui_text.h"
 #include "bloat.h"
@@ -64,6 +65,15 @@ unsigned long long totalRam = 0;
 bool timerRunning = false, closeRequested = false;
 bool preciseTimer = false;
 std::vector<size_t> filtered;
+bool savedOnly = false, comparisonDirty = false;
+std::vector<std::wstring> recentGames;
+std::vector<std::wstring> results(4);
+std::wstring comparisonNote;
+void loadComparison();
+void chooseRecentGame(size_t index);
+void recentGameMenu();
+void launchGame();
+void saveComparison();
 struct State {
   bool active = false, backup = false, available = false;
   std::wstring error;
@@ -87,7 +97,8 @@ std::wstring jobSuccess;
 int jobFeature = -1;
 bool refreshFocusAfterJob = false;
 struct Dialog {
-  bool open = false, information = false, danger = false, languagePicker = false;
+  bool open = false, information = false, danger = false, languagePicker = false,
+       gamePicker = false, profilePicker = false;
   std::wstring title, body, primary = L"Anvend", eyebrow = L"DU HAR KONTROLLEN";
   std::function<void()> accept;
   motion::Tween opacity;
@@ -222,6 +233,8 @@ void filterFeatures() {
   filtered.clear();
   for (size_t i = 0; i < tune::features().size(); ++i) {
     const auto &f = tune::features()[i];
+    if (savedOnly && !states[i].backup)
+      continue;
     if (category && f.category != categories[static_cast<size_t>(category)])
       continue;
     if (!search.empty() &&
@@ -230,8 +243,12 @@ void filterFeatures() {
       continue;
     filtered.push_back(i);
   }
-  if (featureOffset >= filtered.size())
-    featureOffset = 0;
+  const size_t maximum = filtered.size() > 6 ? filtered.size() - 6 : 0;
+  featureOffset = std::min(featureOffset, maximum);
+  if (filtered.empty())
+    listPosition.snap(0);
+  else if (listPosition.to > static_cast<double>(maximum) * 76)
+    listPosition.target(static_cast<double>(maximum) * 76, clockNow());
   if (std::find(filtered.begin(), filtered.end(), static_cast<size_t>(selectedFeature)) ==
           filtered.end() &&
       !filtered.empty())
@@ -241,6 +258,8 @@ std::wstring &editValue();
 void showDialog(const std::wstring &title, const std::wstring &body, const std::wstring &primary,
                 std::function<void()> accept = {}, bool danger = false, bool information = false) {
   dialog.languagePicker = false;
+  dialog.gamePicker = false;
+  dialog.profilePicker = false;
   if (!dialog.open) {
     dialog.previousFocus = keyboardFocus;
     dialog.previousInput = inputFocus;
@@ -269,7 +288,8 @@ void dismissDialog(bool accept) {
   dialog.opacity.target(0, clockNow(), 150);
   keyboardFocus = dialog.previousFocus;
   inputFocus =
-      ((dialog.previousInput == 300 && page == 1) || (dialog.previousInput == 510 && page == 3))
+      ((dialog.previousInput == 300 && page == 1) || (dialog.previousInput == 510 && page == 3) ||
+       (dialog.previousInput >= 560 && dialog.previousInput <= 564 && page == 2 && focusTab == 4))
           ? dialog.previousInput
           : 0;
   if (inputFocus) {
@@ -507,6 +527,7 @@ void finishJob() {
     return;
   auto error = job.get();
   refreshStates();
+  filterFeatures();
   if (refreshFocusAfterJob)
     loadStartups();
   jobFeature = -1;
@@ -550,6 +571,9 @@ void switchFocusTab(int tab) {
   if (tab == focusTab)
     return;
   canvas.transitionPage(clockNow());
+  inputFocus = 0;
+  pendingHigh = 0;
+  keyboardFocus = 450 + tab;
   focusTab = tab;
   focusPosition.snap(0);
   if (tab == 1)
@@ -570,37 +594,57 @@ void startProfile(int kind) {
        L"ClientAnimation"}};
   const std::vector<std::wstring> names = {tr(L"Gamingprofil"), tr(L"Inputprofil"),
                                            tr(L"Fokusprofil"), tr(L"Minimal desktop")};
-  auto selected = keys[static_cast<size_t>(kind)];
-  std::wstring body = tr(L"Disse indstillinger tilpasses, og deres originale værdier gemmes:\n\n");
-  for (const auto &id : selected)
-    for (const auto &f : tune::features())
-      if (f.id == id)
-        body += L"• " + tr(f.title) + L"\n";
-  body += kind == 2 ? tr(L"\nGenstart browserne. Baggrundsudvidelser og notifikationer kan stoppe. "
-                         L"Åbne apps og Windows-tjenester lukkes ikke.")
-          : kind == 1 ? tr(L"\nÆndrer Windows-museadfærd og tilgængelighedsgenveje. Raw-input-spil "
-                           L"kan ignorere museindstillingerne.")
-                      : tr(L"\nEffekten afhænger af spil, hardware og dine præferencer. Ingen "
-                           L"garanteret FPS-forbedring.");
-  showDialog(names[static_cast<size_t>(kind)], body, tr(L"Anvend profil"), [selected] {
-    auto chosen = game;
+  refreshStates();
+  std::vector<tune::Feature> candidates, selected;
+  std::vector<experience::State> candidateStates;
+  unsigned already = 0, unavailable = 0;
+  for (const auto &id : keys[static_cast<size_t>(kind)])
+    for (size_t i = 0; i < tune::features().size(); ++i)
+      if (tune::features()[i].id == id) {
+        candidates.push_back(tune::features()[i]);
+        candidateStates.push_back({states[i].available, states[i].active, states[i].backup});
+        if (!states[i].available)
+          ++unavailable;
+        else if (states[i].active)
+          ++already;
+      }
+  for (auto index : experience::plan(candidateStates))
+    selected.push_back(candidates[index]);
+  std::wstring body = tr(L"Kun disse nødvendige ændringer bliver anvendt:\n\n");
+  for (const auto &f : selected)
+    body += L"• " + tr(f.title) + L" — " + tr(f.scope) + L"\n";
+  body += L"\n" + std::to_wstring(already) + tr(L" allerede indstillet · ") +
+          std::to_wstring(unavailable) + tr(L" ikke tilgængelige (springes over).\n");
+  body += kind == 2   ? tr(L"Genstart browserne. Baggrundsudvidelser og notifikationer kan stoppe. "
+                           L"Åbne apps lukkes ikke.")
+          : kind == 1 ? tr(L"Ændrer mus og tilgængelighedsgenveje. Raw-input-spil kan ignorere "
+                           L"musen. Gennemse hver indstilling under Indstillinger ved behov.")
+                      : tr(L"Genstart spillet efter ændringerne. Mål før og efter; højere FPS er "
+                           L"ikke garanteret.");
+  if (selected.empty()) {
+    showDialog(names[static_cast<size_t>(kind)],
+               tr(L"Ingen nødvendige ændringer i denne profil.\n\n") + body, tr(L"Forstået"), {},
+               false, true);
+    return;
+  }
+  const auto chosen = game;
+  showDialog(names[static_cast<size_t>(kind)], body, tr(L"Anvend profil"), [selected, chosen] {
     beginJob(
         [selected, chosen] {
           std::wstring errors;
-          for (auto &id : selected)
-            for (auto &f : tune::features())
-              if (f.id == id) {
-                try {
-                  tune::apply(f, chosen);
-                } catch (const std::exception &e) {
-                  errors += tr(f.title) + L": " + tune::errorText(e) + L"\n";
-                }
-              }
+          for (const auto &f : selected)
+            try {
+              if (!tune::active(f, chosen))
+                tune::apply(f, chosen);
+            } catch (const std::exception &e) {
+              errors += tr(f.title) + L": " + tune::errorText(e) + L"\n";
+            }
           return errors;
         },
         tr(L"Profil anvendt. Originale indstillinger kan gendannes."));
   });
 }
+
 void changeFeature(size_t index, bool restoring) {
   if (job.valid() || index >= states.size())
     return;
@@ -619,16 +663,14 @@ void changeFeature(size_t index, bool restoring) {
             tr(feature.scope),
         static_cast<int>(index));
   };
-  bool confirm =
-      !restoring && (feature.kind == tune::Kind::Power || feature.kind == tune::Kind::Fullscreen ||
-                     feature.spi == SPI_GETFILTERKEYS || feature.spi == SPI_GETSTICKYKEYS ||
-                     feature.spi == SPI_GETTOGGLEKEYS || feature.spi == SPI_GETMOUSESPEED);
-  if (confirm)
-    showDialog(tr(feature.title),
-               tr(feature.details) + tr(L"\n\nOriginalværdien gemmes før ændringen."),
-               tr(L"Anvend ændring"), action, feature.kind == tune::Kind::Fullscreen);
-  else
-    action();
+  showDialog((restoring ? tr(L"Gendan: ") : tr(L"Gennemse: ")) + tr(feature.title),
+             (restoring ? tr(L"Genskaber den gemte originalværdi. Genstart spillet eller appen "
+                             L"bagefter, hvis indstillingen kræver det.")
+                        : tr(feature.details) + L"\n\n" + tr(feature.scope) +
+                              tr(L"\n\nOriginalværdien gemmes før ændringen.")),
+             restoring ? tr(L"Gendan") : tr(L"Anvend ændring"), action,
+             !restoring &&
+                 (feature.kind == tune::Kind::Fullscreen || feature.kind == tune::Kind::Power));
 }
 void hit(int id, ui::Rect rect, bool enabled = true, bool field = false) {
   if (hitClipping) {
@@ -710,19 +752,27 @@ void sectionTitle(ui::Painter &p, const std::wstring &eyebrow, const std::wstrin
   p.text(title, {42, 145, 1100, 52}, 34, ui::white, true);
   p.text(subtitle, {44, 199, 1100, 32}, 14, ui::muted);
 }
+std::wstring settingStatus(const State &s) {
+  switch (experience::status({s.available, s.active, s.backup})) {
+  case experience::Status::Unavailable:
+    return tr(L"Ikke tilgængelig");
+  case experience::Status::Applied:
+    return tr(L"Anvendt · original gemt");
+  case experience::Status::AlreadySet:
+    return tr(L"Allerede indstillet i Windows");
+  case experience::Status::Changed:
+    return tr(L"Original gemt · ikke anvendt");
+  default:
+    return tr(L"Klar til ændring");
+  }
+}
 void switchControl(ui::Painter &p, int index, ui::Rect r) {
-  auto &s = states[static_cast<size_t>(index)];
-  bool enabled = !job.valid() && (s.active ? s.backup : s.available);
-  hit(1000 + index, r, enabled);
-  float value = static_cast<float>(toggles[index].value(clockNow())),
-        h = enabled ? hover(1000 + index) : 0;
-  unsigned track = ui::mix(0x343b47, ui::lime, value);
-  p.round(r, ui::mix(track, ui::white, h * .09f), r.h / 2, enabled || s.active ? 1 : .42f);
-  float x = r.x + 5 + (r.w - r.h) * value;
-  p.circle(x + (r.h - 10) / 2, r.y + r.h / 2, (r.h - 10) / 2,
-           ui::mix(0x929aa8, ui::background, value));
-  if (keyboardFocus == 1000 + index)
-    p.border({r.x - 4, r.y - 4, r.w + 8, r.h + 8}, ui::purple, r.h / 2 + 4, 1, 1.5f);
+  const auto &s = states[static_cast<size_t>(index)];
+  button(p, 1000 + index, {r.x - 52, r.y - 4, r.w + 52, r.h + 8},
+         s.backup   ? tr(L"Gendan")
+         : s.active ? tr(L"Indstillet")
+                    : tr(L"Gennemse"),
+         false, !job.valid() && (s.backup || (!s.active && s.available)));
 }
 void featureRow(ui::Painter &p, size_t index, float y, float width = 754) {
   const auto &f = tune::features()[index];
@@ -737,54 +787,54 @@ void featureRow(ui::Painter &p, size_t index, float y, float width = 754) {
     p.round({44, y + 18, 3, 32}, ui::purple, 2);
   p.circle(72, y + 33, 13, s.active ? ui::lime : ui::muted, .08f);
   p.circle(72, y + 33, 3, s.active ? ui::lime : ui::muted);
-  p.text(tr(f.title), {96, y + 12, width - 192, 23}, 16, ui::white, true);
-  p.text(tr(f.scope), {96, y + 39, width - 192, 18}, 11, ui::muted);
+  p.text(tr(f.title), {96, y + 12, width - 244, 23}, 16, ui::white, true);
+  p.text(settingStatus(s), {96, y + 39, width - 244, 18}, 11,
+         !s.available ? ui::red
+         : s.backup   ? ui::purple
+                      : ui::muted);
   switchControl(p, static_cast<int>(index), {44 + width - 76, y + 21, 48, 26});
 }
 void drawDashboard(ui::Painter &p) {
-  p.text(tr(L"D I T   P E R F O R M A N C E - W O R K S P A C E"), {44, 134, 710, 22}, 11, ui::lime,
-         true);
-  p.text(tr(L"Mindre støj.\nMere spil."), {40, 177, 718, 143}, 56, ui::white, true);
-  p.text(tr(L"Tilpas Windows til din session. Vælg præcis, hvad der ændres — og behold en vej "
-            L"tilbage."),
-         {44, 324, 630, 55}, 17, ui::muted);
-  button(p, 423, {44, 395, 212, 46}, tr(L"Klargør fokus"), true, !job.valid());
-  p.text(tr(L"3 baggrundsvalg · kan gendannes"), {276, 410, 450, 28}, 12, ui::muted);
-  panel(p, {794, 132, 378, 302});
-  p.text(tr(L"LIGE NU PÅ DIN PC"), {820, 157, 240, 20}, 11, ui::muted, true);
-  p.circle(1139, 166, 3, ui::lime);
-  p.text(processCount ? std::to_wstring(processCount) : L"—", {817, 192, 310, 105}, 78, ui::lime,
-         true);
-  p.text(tr(L"kørende processer"), {823, 295, 300, 25}, 15, ui::white);
-  p.line(821, 340, 1145, 340, ui::line);
-  p.text(std::to_wstring(ramLoad) + L"%", {822, 358, 150, 36}, 25, ui::white, true);
-  p.text(std::to_wstring(threadCount), {998, 358, 148, 36}, 25, ui::white, true);
-  p.text(tr(L"RAM i brug / ") + std::to_wstring(totalRam) + L" GB", {823, 398, 160, 20}, 11,
-         ui::muted);
-  p.text(tr(L"aktive tråde"), {1000, 398, 148, 20}, 11, ui::muted);
-  panel(p, {44, 480, 716, 266});
-  p.text(tr(L"Vælg din retning"), {66, 500, 640, 32}, 19, ui::white, true);
-  const std::wstring names[] = {tr(L"Gaming"), tr(L"Input"), tr(L"Fokus"), tr(L"Minimal desktop")};
-  const std::wstring descriptions[] = {tr(L"Game Mode og optagelse"), tr(L"Mus og tastaturgenveje"),
-                                       tr(L"Browser-baggrundsaktivitet"),
-                                       tr(L"Mindre bevægelse på skrivebordet")};
-  const int ids[] = {420, 421, 423, 422};
-  for (int i = 0; i < 4; ++i) {
-    float y = 544 + i * 47.f;
-    hit(ids[i], {60, y, 684, 43}, !job.valid());
-    float h = hover(ids[i]);
-    p.round({60, y, 684, 43}, ui::white, 8, h * .035f);
-    p.text(L"0" + std::to_wstring(i + 1), {70, y + 10, 32, 24}, 12, ui::lime, true);
-    p.text(names[i], {112, y + 7, 190, 26}, 16, ui::white, true);
-    p.text(descriptions[i], {304, y + 11, 372, 22}, 12, ui::muted);
-    p.text(L"↗", {699, y + 7, 32, 28}, 20, ui::lime);
-    if (i < 3)
-      p.line(112, y + 46, 724, y + 46, ui::line, 1, .55f);
+  panel(p, {44, 132, 716, 176});
+  p.text(tr(L"START HER"), {68, 151, 660, 22}, 11, ui::lime, true);
+  p.text(tr(L"Gør klar til dit næste spil."), {66, 181, 668, 51}, 32, ui::white, true);
+  p.text(tr(L"Vælg dit spil, gennemse ændringerne og mål resultatet. Intet ændres automatisk."),
+         {68, 245, 660, 48}, 15, ui::muted);
+  const std::wstring titles[] = {tr(L"Vælg dit spil"), tr(L"Gennemse gamingprofil"),
+                                 tr(L"Sammenlign dit resultat")};
+  const std::wstring descriptions[] = {
+      game.empty() ? tr(L"Vælg spillets rigtige .exe for indstillinger pr. spil.") : filename(game),
+      tr(L"Game Mode og baggrundsoptagelse. Se planen før du anvender den."),
+      tr(L"Gem dine egne FPS-målinger fra samme scene og grafikindstillinger.")};
+  const std::wstring actions[] = {game.empty() ? tr(L"Vælg spil") : tr(L"Åbn spilprofil"),
+                                  tr(L"Vis ændringer"), tr(L"Åbn målinger")};
+  const int ids[] = {game.empty() ? 410 : 590, 420, 586};
+  for (int i = 0; i < 3; ++i) {
+    float y = 330 + i * 136.f;
+    panel(p, {44, y, 716, 116});
+    p.text(L"0" + std::to_wstring(i + 1), {68, y + 20, 45, 28}, 17, ui::purple, true);
+    p.text(titles[i], {122, y + 18, 434, 29}, 20, ui::white, true);
+    p.text(descriptions[i], {122, y + 57, 420, 46}, 13, ui::muted);
+    button(p, ids[i], {566, y + 37, 170, 39}, actions[i], i == 0, !job.valid());
   }
-  panel(p, {794, 480, 378, 266});
-  p.text(tr(L"Din maskine"), {820, 502, 324, 32}, 19, ui::white, true);
-  p.text(hardware, {820, 550, 326, 154}, 13, ui::muted);
-  pill(p, tr(L"LOKALT / INGEN KONTO"), {820, 710, 212, 22}, ui::purple);
+  panel(p, {794, 132, 378, 202});
+  p.text(tr(L"DIN VEJ TILBAGE"), {820, 152, 326, 23}, 11, ui::purple, true);
+  p.text(std::to_wstring(backups), {818, 181, 80, 57}, 42, ui::white, true);
+  p.text(tr(L"gemte originaler"), {908, 201, 232, 26}, 15, ui::muted);
+  button(p, 587, {820, 271, 326, 39}, tr(L"Gennemse gemte ændringer"), false);
+  panel(p, {794, 354, 378, 184});
+  p.text(tr(L"SYSTEMSTATUS · IKKE EN FPS-SCORE"), {820, 375, 326, 23}, 10, ui::muted, true);
+  p.text(std::to_wstring(processCount), {818, 410, 142, 54}, 38, ui::white, true);
+  p.text(std::to_wstring(ramLoad) + L"%", {1002, 410, 144, 54}, 38, ui::white, true);
+  p.text(tr(L"kørende processer"), {820, 478, 165, 22}, 12, ui::muted);
+  p.text(tr(L"RAM i brug"), {1006, 478, 140, 22}, 12, ui::muted);
+  button(p, 592, {820, 509, 326, 24}, tr(L"Din maskine"));
+  panel(p, {794, 558, 378, 180});
+  p.text(tr(L"Før du ændrer noget"), {820, 580, 326, 29}, 18, ui::white, true);
+  p.text(tr(L"En indstilling ad gangen. Test samme spilscene. Gendan hvis resultatet bliver "
+            L"dårligere."),
+         {820, 624, 326, 54}, 14, ui::muted);
+  button(p, 588, {820, 690, 326, 29}, tr(L"Sådan bruger du Maxifying"));
 }
 void drawSettings(ui::Painter &p) {
   sectionTitle(p, tr(L"INDIVIDUEL KONTROL"), tr(L"Finjustér din PC."),
@@ -800,9 +850,14 @@ void drawSettings(ui::Painter &p) {
            category == static_cast<int>(i) ? ui::white : ui::muted, true);
     x += w + 6;
   }
+  button(p, 591, {824, 199, 146, 29}, tr(L"Profiler"), false, !job.valid());
+  button(p, 589, {982, 199, 190, 29},
+         savedOnly ? tr(L"Alle indstillinger") : tr(L"Gemte ændringer"));
   input(p, 300, {824, 242, 348, 36}, search, tr(L"Søg efter en indstilling…"));
   if (filtered.empty())
-    p.text(tr(L"Ingen match. Prøv et andet søgeord."), {68, 342, 680, 90}, 20, ui::muted);
+    p.text(savedOnly ? tr(L"Ingen gemte ændringer for Windows og det valgte spil.")
+                     : tr(L"Ingen match. Prøv et andet søgeord."),
+           {68, 342, 680, 90}, 20, ui::muted);
   float position = static_cast<float>(listPosition.value(clockNow()));
   size_t first = static_cast<size_t>(std::max(0.f, std::floor(position / 76)));
   p.clip({44, 298, 754, 448});
@@ -830,14 +885,16 @@ void drawSettings(ui::Painter &p) {
   p.text(tr(f.title), {848, 353, 300, 66}, 25, ui::white, true, DWRITE_TEXT_ALIGNMENT_LEADING, a);
   p.text(tr(f.description), {848, 429, 300, 92}, 15, ui::muted, false,
          DWRITE_TEXT_ALIGNMENT_LEADING, a);
-  pill(p,
-       s.available ? (s.active ? tr(L"ØNSKET VÆRDI ER VALGT") : tr(L"KLAR TIL TILPASNING"))
-                   : tr(L"IKKE TILGÆNGELIG"),
-       {848, 532, 300, 25}, s.available ? (s.active ? ui::lime : ui::muted) : ui::red);
-  p.text(s.backup   ? tr(L"Din originalværdi er gemt.")
+  pill(p, settingStatus(s), {848, 532, 300, 25},
+       !s.available ? ui::red
+       : s.backup   ? ui::purple
+                    : ui::muted);
+  p.text(!s.available
+             ? (s.error.empty() ? tr(L"Windows understøtter ikke denne indstilling.") : s.error)
+         : s.backup ? tr(L"Din originalværdi er gemt.")
          : s.active ? tr(L"Værdien var allerede valgt i Windows.")
                     : tr(L"Originalværdien gemmes før ændring."),
-         {848, 570, 300, 48}, 12, ui::muted);
+         {848, 570, 300, 53}, 12, !s.available ? ui::red : ui::muted);
   button(p, 3000 + selectedFeature * 3, {848, 635, 142, 38},
          s.active ? tr(L"Allerede valgt") : tr(L"Anvend"), true,
          !job.valid() && s.available && !s.active);
@@ -847,8 +904,8 @@ void drawSettings(ui::Painter &p) {
 }
 void focusTabs(ui::Painter &p) {
   const std::wstring names[] = {tr(L"Spilprofil"), tr(L"Kørende apps"), tr(L"Opstart"),
-                                tr(L"Windows-apps")};
-  for (int i = 0; i < 4; ++i) {
+                                tr(L"Windows-apps"), tr(L"Målinger")};
+  for (int i = 0; i < 5; ++i) {
     ui::Rect r{44 + i * 156.f, 244, 148, 34};
     hit(450 + i, r);
     p.round(r, focusTab == i ? ui::raised : ui::panel, 9);
@@ -914,11 +971,65 @@ void drawBloat(ui::Painter &p) {
              !inventoryJob.valid() && !job.valid());
   button(p, 552, {848, 687, 300, 30}, tr(L"Find den valgte app i Store"), false, selected);
 }
+std::wstring percent(double value) {
+  wchar_t buffer[40];
+  swprintf(buffer, 40, L"%+.1f%%", value);
+  return buffer;
+}
+void drawComparison(ui::Painter &p) {
+  panel(p, {44, 304, 754, 434});
+  panel(p, {824, 304, 348, 434});
+  p.text(tr(L"Dine målinger · indtastes manuelt"), {68, 326, 706, 34}, 22, ui::white, true);
+  if (game.empty()) {
+    p.text(tr(L"Vælg et spil først. Hvert spil har sine egne gemte målinger."), {68, 390, 680, 90},
+           18, ui::muted);
+    button(p, 410, {68, 514, 244, 42}, tr(L"Vælg spil"), true, !job.valid());
+  } else {
+    p.text(filename(game) + (comparisonDirty ? L" · " + tr(L"Ikke gemt") : L""), {68, 369, 706, 25},
+           14, ui::purple, true);
+    p.text(tr(L"Før ændringer"), {68, 415, 310, 27}, 17, ui::white, true);
+    p.text(tr(L"Efter ændringer"), {432, 415, 310, 27}, 17, ui::white, true);
+    p.text(tr(L"Gennemsnitlig FPS"), {68, 457, 310, 22}, 12, ui::muted);
+    p.text(tr(L"Gennemsnitlig FPS"), {432, 457, 310, 22}, 12, ui::muted);
+    input(p, 560, {68, 485, 310, 39}, results[0], L"144.0");
+    input(p, 562, {432, 485, 310, 39}, results[2], L"144.0");
+    p.text(L"1% low FPS", {68, 543, 310, 22}, 12, ui::muted);
+    p.text(L"1% low FPS", {432, 543, 310, 22}, 12, ui::muted);
+    input(p, 561, {68, 570, 310, 39}, results[1], L"90.0");
+    input(p, 563, {432, 570, 310, 39}, results[3], L"90.0");
+    p.text(tr(L"Testscene / grafikindstillinger"), {68, 629, 674, 23}, 12, ui::muted);
+    input(p, 564, {68, 658, 674, 39}, comparisonNote,
+          tr(L"Fx samme bane, 1080p, samme grafik og testlængde"));
+  }
+  p.text(tr(L"Sammenlign samme test"), {848, 330, 300, 67}, 24, ui::white, true);
+  p.text(tr(L"Brug spillets benchmark eller et måleværktøj. 1% low beskriver de langsomme frames. "
+            L"Maxifying måler ikke FPS automatisk."),
+         {848, 409, 300, 113}, 14, ui::muted);
+  if (experience::validResults(results)) {
+    const double average =
+        experience::delta(*experience::fps(results[0]), *experience::fps(results[2]));
+    const double low =
+        experience::delta(*experience::fps(results[1]), *experience::fps(results[3]));
+    p.text(percent(average) + tr(L" gennemsnit"), {848, 540, 300, 34}, 22,
+           average >= 0 ? ui::lime : ui::red, true);
+    p.text(percent(low) + L" 1% low", {848, 582, 300, 28}, 18, low >= 0 ? ui::lime : ui::red, true);
+  } else
+    p.text(tr(L"Indtast alle fire tal. 1% low må ikke overstige gennemsnittet. Brug punktum eller "
+              L"komma."),
+           {848, 538, 300, 77}, 13, ui::muted);
+  button(p, 565, {848, 635, 300, 39}, tr(L"Gem målinger for spillet"), true,
+         !game.empty() && experience::validResults(results));
+  button(p, 587, {848, 688, 300, 29}, tr(L"Gennemse gemte ændringer"));
+}
 void drawFocus(ui::Painter &p) {
   sectionTitle(
       p, tr(L"DIN NÆSTE SESSION"), tr(L"Fokus, på dine præmisser."),
       tr(L"Et spil ad gangen. Et program ad gangen. Ingen blind lukning af Windows-processer."));
   focusTabs(p);
+  if (focusTab == 4) {
+    drawComparison(p);
+    return;
+  }
   if (focusTab == 3) {
     drawBloat(p);
     return;
@@ -926,10 +1037,13 @@ void drawFocus(ui::Painter &p) {
   if (focusTab == 0) {
     panel(p, {44, 304, 754, 434});
     p.text(tr(L"Vælg spillets rigtige programfil"), {68, 330, 706, 32}, 21, ui::white, true);
-    p.text(game.empty() ? tr(L"Intet spil valgt endnu") : filename(game), {68, 376, 706, 44}, 15,
+    p.text(game.empty() ? tr(L"Intet spil valgt endnu") : game, {68, 376, 706, 44}, 15,
            game.empty() ? ui::muted : ui::lime);
     button(p, 410, {68, 434, 244, 42},
            game.empty() ? tr(L"Vælg en .exe") : tr(L"Vælg et andet spil"), true, !job.valid());
+    button(p, 567, {326, 434, 194, 42}, tr(L"Seneste spil"), false,
+           !recentGames.empty() && !job.valid());
+    button(p, 568, {534, 434, 240, 42}, tr(L"Start spil"), false, !game.empty() && !job.valid());
     p.text(tr(L"Ændringerne gælder kun denne fil. Genstart spillet bagefter."), {68, 499, 706, 44},
            14, ui::muted);
     int row = 0;
@@ -942,7 +1056,7 @@ void drawFocus(ui::Painter &p) {
       p.text(tr(f.title), {68, y, 550, 24}, 16, ui::white, true);
       p.text(tr(f.scope), {68, y + 28, 550, 22}, 12, ui::muted);
       switchControl(p, static_cast<int>(i), {704, y + 8, 48, 26});
-      hit(3002 + static_cast<int>(i) * 3, {68, y, 600, 55});
+      hit(3002 + static_cast<int>(i) * 3, {68, y, 575, 55});
       ++row;
     }
     panel(p, {824, 304, 348, 434});
@@ -1060,6 +1174,7 @@ void drawRestore(ui::Painter &p) {
                   L"opstartsposter."));
   panel(p, {44, 258, 724, 480});
   p.text(tr(L"Seneste aktivitet"), {70, 285, 668, 32}, 22, ui::white, true);
+  button(p, 587, {462, 282, 280, 35}, tr(L"Gennemse gemte ændringer"));
   p.line(70, 337, 742, 337, ui::line);
   p.clip({70, 359, 668, 350});
   p.text(activity.empty() ? tr(L"Din historik begynder, når du foretager en ændring.") : activity,
@@ -1113,14 +1228,28 @@ void drawDialog(ui::Painter &p) {
          {390, y + 31, 450, 20}, 11, accent, true);
   p.text(dialog.title, {360, y + 79, 496, 80}, 29, ui::white, true);
   p.clip({360, y + 174, 496, 196});
-  p.text(dialog.body,
-         {360, y + 174 - static_cast<float>(dialog.scroll.value(clockNow())), 496, 8000}, 15,
-         ui::muted);
+  if (!dialog.gamePicker && !dialog.profilePicker)
+    p.text(dialog.body,
+           {360, y + 174 - static_cast<float>(dialog.scroll.value(clockNow())), 496, 8000}, 15,
+           ui::muted);
   p.unclip();
   dialog.maximum = std::max(0.f, p.textHeight(dialog.body, 496, 15) - 196);
   if (dialog.maximum > 0)
     p.text(tr(L"Rul for at læse resten"), {360, y + 376, 496, 20}, 11, ui::purple);
-  if (dialog.languagePicker) {
+  if (dialog.profilePicker) {
+    const std::wstring labels[] = {tr(L"Gamingprofil"), tr(L"Inputprofil"), tr(L"Fokusprofil"),
+                                   tr(L"Minimal desktop")};
+    for (int i = 0; i < 4; ++i)
+      button(p, 9300 + i, {360, y + 174 + i * 47.f, 496, 38}, labels[i], false, dialog.open);
+    button(p, 9002, {360, y + 412, 496, 38}, tr(L"Annuller"), false, dialog.open);
+  } else if (dialog.gamePicker) {
+    for (size_t i = 0; i < recentGames.size(); ++i)
+      button(p, 9200 + static_cast<int>(i), {360, y + 174 + i * 36.f, 496, 32},
+             filename(recentGames[i]) + L" · " +
+                 filename(recentGames[i].substr(0, recentGames[i].find_last_of(L"\\/"))),
+             false, dialog.open);
+    button(p, 9002, {360, y + 412, 496, 38}, tr(L"Annuller"), false, dialog.open);
+  } else if (dialog.languagePicker) {
     const std::wstring names[] = {L"Dansk", L"English", L"Svenska"};
     for (int i = 0; i < 3; ++i)
       button(p, 9100 + i, {360, y + 250 + i * 47.f, 496, 38}, names[i],
@@ -1148,8 +1277,9 @@ void drawFrame(ui::Painter &p) {
            page == static_cast<int>(i) ? ui::white : ui::muted, true, DWRITE_TEXT_ALIGNMENT_CENTER);
   }
   button(p, 311, {986, 29, 92, 32},
-         l10n::selected == l10n::Language::Danish ? L"Dansk" :
-         l10n::selected == l10n::Language::Swedish ? L"Svenska" : L"English");
+         l10n::selected == l10n::Language::Danish    ? L"Dansk"
+         : l10n::selected == l10n::Language::Swedish ? L"Svenska"
+                                                     : L"English");
   hit(1, {1100, 26, 32, 35});
   hit(2, {1142, 26, 32, 35});
   p.round({1100, 26, 32, 35}, ui::white, 8, hover(1) * .06f);
@@ -1167,14 +1297,14 @@ void drawFrame(ui::Painter &p) {
   p.circle(48, 810, 3, tone, revealed);
   p.text(tr(status), {62, 801 + 3 * (1 - revealed), 930, 24}, 12, tone, false,
          DWRITE_TEXT_ALIGNMENT_LEADING, revealed);
-  p.text(L"MAXIFYING / 0.6", {1020, 802, 152, 22}, 11, ui::muted, true,
+  p.text(L"MAXIFYING / 0.7", {1020, 802, 152, 22}, 11, ui::muted, true,
          DWRITE_TEXT_ALIGNMENT_TRAILING);
   if (keyboardMode && !dialog.open) {
     auto focus = std::find_if(hits.begin(), hits.end(),
                               [](const Hit &h) { return h.id == keyboardFocus && h.enabled; });
     bool custom = (keyboardFocus >= 100 && keyboardFocus < 105) ||
                   (keyboardFocus >= 400 && keyboardFocus < 407) ||
-                  (keyboardFocus >= 450 && keyboardFocus < 454) ||
+                  (keyboardFocus >= 450 && keyboardFocus < 455) ||
                   (keyboardFocus >= 2000 && keyboardFocus < 2023) || keyboardFocus >= 20000;
     if (focus != hits.end() && custom) {
       auto r = focus->rect;
@@ -1220,6 +1350,136 @@ std::wstring selectFile(bool save) {
     throw std::runtime_error("Windows file picker failed");
   return path;
 }
+std::wstring readUiText(const std::wstring &path, const std::wstring &name) {
+  auto value = tune::read(path, name);
+  if (!value.exists)
+    return {};
+  if (value.type != REG_SZ || value.bytes.size() < sizeof(wchar_t) ||
+      value.bytes.size() > 1024 * 1024 || value.bytes.size() % sizeof(wchar_t))
+    throw std::runtime_error("Saved user data has an invalid format");
+  std::wstring text(value.bytes.size() / sizeof(wchar_t), L'\0');
+  memcpy(text.data(), value.bytes.data(), value.bytes.size());
+  if (text.back() != L'\0')
+    throw std::runtime_error("Saved user data is incomplete");
+  text.pop_back();
+  if (text.find(L'\0') != std::wstring::npos)
+    throw std::runtime_error("Saved user data contains invalid characters");
+  return text;
+}
+std::wstring comparisonKey() {
+  return L"Software\\Maxifying\\Comparisons\\" + experience::key(lower(game));
+}
+void loadComparison() {
+  results.assign(4, L"");
+  comparisonNote.clear();
+  comparisonDirty = false;
+  if (game.empty())
+    return;
+  std::wistringstream data(readUiText(comparisonKey(), L"Record"));
+  std::wstring path;
+  if (!std::getline(data, path) || lower(path) != lower(game))
+    return;
+  std::vector<std::wstring> loaded(4);
+  for (auto &value : loaded)
+    if (!std::getline(data, value))
+      return;
+  if (!experience::validResults(loaded))
+    return;
+  std::wstring note;
+  std::getline(data, note);
+  results = loaded;
+  comparisonNote = ui_text::printable(note, 256);
+}
+void saveComparison() {
+  if (game.empty() || !experience::validResults(results)) {
+    errorDialog(tr(L"Indtast fire gyldige FPS-tal, og vælg et spil først."));
+    return;
+  }
+  std::wstring record = game + L"\n";
+  for (const auto &value : results)
+    record += value + L"\n";
+  record += ui_text::printable(comparisonNote, 256);
+  tune::write(comparisonKey(), L"Record", tune::stringValue(record));
+  if (readUiText(comparisonKey(), L"Record") != record)
+    throw std::runtime_error("Measurement save was not confirmed");
+  comparisonDirty = false;
+  setStatus(tr(L"Dine indtastede målinger er gemt for dette spil."), 2);
+}
+bool usableGame(const std::wstring &path) {
+  auto attributes = GetFileAttributesW(path.c_str());
+  return path.size() > 4 && _wcsicmp(path.c_str() + path.size() - 4, L".exe") == 0 &&
+         attributes != INVALID_FILE_ATTRIBUTES && !(attributes & FILE_ATTRIBUTE_DIRECTORY);
+}
+void loadRecentGames() {
+  recentGames.clear();
+  std::wistringstream data(readUiText(L"Software\\Maxifying\\UI", L"RecentGames"));
+  std::wstring path;
+  while (recentGames.size() < 6 && std::getline(data, path))
+    if (!path.empty() && path.size() <= 32767 &&
+        std::find(recentGames.begin(), recentGames.end(), path) == recentGames.end())
+      recentGames.push_back(path);
+}
+void rememberRecentGame() {
+  recentGames.erase(
+      std::remove_if(recentGames.begin(), recentGames.end(),
+                     [](const std::wstring &path) { return lower(path) == lower(game); }),
+      recentGames.end());
+  recentGames = experience::recent(recentGames, game);
+  std::wstring record;
+  for (const auto &path : recentGames)
+    record += path + L"\n";
+  tune::write(L"Software\\Maxifying\\UI", L"RecentGames", tune::stringValue(record));
+}
+void recentGameMenu() {
+  showDialog(tr(L"Seneste spil"), L"", tr(L"Forstået"), {}, false, true);
+  dialog.gamePicker = true;
+  keyboardFocus = recentGames.empty() ? 9002 : 9200;
+}
+void selectGamePath(const std::wstring &path) {
+  if (comparisonDirty) {
+    showDialog(
+        tr(L"Målingerne er ikke gemt"),
+        tr(L"Annuller og gem under Målinger, eller kassér de indtastede ændringer før du skifter "
+           L"spil."),
+        tr(L"Kassér og skift spil"),
+        [path] {
+          comparisonDirty = false;
+          selectGamePath(path);
+        },
+        true);
+    return;
+  }
+  game = path;
+  tune::rememberGame(game);
+  rememberRecentGame();
+  loadComparison();
+  refreshStates();
+  filterFeatures();
+  setStatus(tr(L"Valgt spil: ") + filename(game), 2);
+}
+void chooseRecentGame(size_t index) {
+  if (index >= recentGames.size())
+    return;
+  const auto path = recentGames[index];
+  if (!usableGame(path)) {
+    errorDialog(tr(L"Spilfilen findes ikke længere. Vælg den igen fra dens nye placering."));
+    return;
+  }
+  dismissDialog(false);
+  selectGamePath(path);
+}
+void launchGame() {
+  if (!usableGame(game)) {
+    errorDialog(tr(L"Spilfilen findes ikke længere. Vælg den igen fra dens nye placering."));
+    return;
+  }
+  const auto directory = game.substr(0, game.find_last_of(L"\\/"));
+  const auto launched =
+      ShellExecuteW(window, L"open", game.c_str(), nullptr, directory.c_str(), SW_SHOWNORMAL);
+  if (reinterpret_cast<INT_PTR>(launched) <= 32)
+    throw std::runtime_error("Windows could not start this executable. Try the game's launcher.");
+  setStatus(tr(L"Startanmodning sendt. Nogle spil kræver deres egen launcher."), 2);
+}
 void chooseGame() {
   auto selected = selectFile(false);
   if (selected.empty())
@@ -1228,16 +1488,19 @@ void chooseGame() {
   if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_DIRECTORY) ||
       selected.size() < 4 || _wcsicmp(selected.c_str() + selected.size() - 4, L".exe"))
     throw std::runtime_error("Choose an existing .exe file");
-  game = selected;
-  tune::rememberGame(game);
-  refreshStates();
-  setStatus(tr(L"Valgt spil: ") + filename(game), 2);
+  selectGamePath(selected);
 }
 void exportReport() {
   auto path = selectFile(true);
   if (path.empty())
     return;
-  std::wstring report = L"Maxifying 0.6\r\n\r\n" + hardware + L"\r\n\r\n";
+  std::wstring report = L"Maxifying 0.7\r\n\r\n" + hardware + L"\r\n\r\n";
+  if (!game.empty() && experience::validResults(results)) {
+    report += L"\r\n" + tr(L"Manuelt indtastede målinger") + L"\r\n" + game + L"\r\n";
+    report += tr(L"Gennemsnitlig FPS") + L": " + results[0] + L" -> " + results[2] + L"\r\n";
+    report += L"1% low FPS: " + results[1] + L" -> " + results[3] + L"\r\n" + comparisonNote +
+              L"\r\n\r\n";
+  }
   for (size_t i = 0; i < states.size(); ++i)
     report += tr(tune::features()[i].title) + L": " +
               (states[i].available
@@ -1413,6 +1676,38 @@ void chooseLanguage(l10n::Language language) {
   invalidate();
 }
 void activate(int id) {
+  if (id == 592) {
+    refreshHardware();
+    showDialog(tr(L"Din maskine"), hardware, tr(L"Forstået"), {}, false, true);
+    return;
+  }
+  if (id == 591) {
+    showDialog(tr(L"Vælg profil"), L"", tr(L"Forstået"), {}, false, true);
+    dialog.profilePicker = true;
+    keyboardFocus = 9300;
+    return;
+  }
+  if (id >= 9300 && id < 9304) {
+    dismissDialog(false);
+    startProfile(id - 9300);
+    return;
+  }
+  if (id >= 9200 && id < 9206) {
+    chooseRecentGame(static_cast<size_t>(id - 9200));
+    return;
+  }
+  if (id == 565) {
+    saveComparison();
+    return;
+  }
+  if (id == 567) {
+    recentGameMenu();
+    return;
+  }
+  if (id == 568) {
+    launchGame();
+    return;
+  }
   if (id == 311) {
     languageMenu();
     return;
@@ -1444,6 +1739,8 @@ void activate(int id) {
     return;
   }
   if (id == 310) {
+    savedOnly = false;
+    filterFeatures();
     navigate(1);
     inputFocus = 300;
     keyboardFocus = 300;
@@ -1463,7 +1760,7 @@ void activate(int id) {
     animate();
     return;
   }
-  if (id >= 450 && id < 454) {
+  if (id >= 450 && id < 455) {
     switchFocusTab(id - 450);
     return;
   }
@@ -1489,7 +1786,7 @@ void activate(int id) {
   }
   if (id >= 1000 && id < 1000 + static_cast<int>(states.size())) {
     size_t index = static_cast<size_t>(id - 1000);
-    changeFeature(index, states[index].active);
+    changeFeature(index, states[index].backup);
     return;
   }
   if (id >= 20000 && id < 20000 + static_cast<int>(processes.size())) {
@@ -1571,6 +1868,41 @@ void activate(int id) {
     return;
   }
   switch (id) {
+  case 590:
+    navigate(2);
+    switchFocusTab(0);
+    break;
+  case 586:
+    navigate(2);
+    switchFocusTab(4);
+    break;
+  case 587:
+    savedOnly = true;
+    search.clear();
+    category = 0;
+    featureOffset = 0;
+    listPosition.snap(0);
+    filterFeatures();
+    navigate(1);
+    break;
+  case 588:
+    showDialog(tr(L"Sådan bruger du Maxifying"),
+               tr(L"1. Vælg spillet og luk det før ændringer.\n2. Gennemse og anvend kun de "
+                  L"indstillinger, du ønsker.\n3. Genstart spillet og test samme scene.\n4. "
+                  L"Sammenlign dine målte FPS-tal under Målinger.\n5. Gendan gemte ændringer hvis "
+                  L"resultatet bliver dårligere.\n\nAllerede indstillet betyder, at Windows havde "
+                  L"værdien i forvejen. Maxifying kan kun gendanne originaler, som appen selv har "
+                  L"gemt. Afinstallerede apps og deres data gendannes ikke."),
+               tr(L"Forstået"), {}, false, true);
+    break;
+  case 589:
+    savedOnly = !savedOnly;
+    category = 0;
+    search.clear();
+    featureOffset = 0;
+    listPosition.snap(0);
+    filterFeatures();
+    break;
   case 420:
     startProfile(0);
     break;
@@ -1745,7 +2077,8 @@ const Hit *hitAt(float x, float y) {
   for (auto i = hits.rbegin(); i != hits.rend(); ++i) {
     if (!i->enabled || !i->rect.contains(x, y))
       continue;
-    if (modal && i->id != 9001 && i->id != 9002 && !(i->id >= 9100 && i->id <= 9102))
+    if (modal && i->id != 9001 && i->id != 9002 && !(i->id >= 9100 && i->id <= 9102) &&
+        !(i->id >= 9200 && i->id < 9206) && !(i->id >= 9300 && i->id < 9304))
       continue;
     if (!modal && !canvas.interactive(clockNow()) && i->rect.y >= 100 && i->rect.y < 788)
       continue;
@@ -1766,6 +2099,10 @@ void moveHover(int id) {
   animate();
 }
 std::wstring &editValue() {
+  if (inputFocus >= 560 && inputFocus <= 563)
+    return results[static_cast<size_t>(inputFocus - 560)];
+  if (inputFocus == 564)
+    return comparisonNote;
   return inputFocus == 510 ? address : search;
 }
 size_t previousPoint(const std::wstring &value, size_t at) {
@@ -1775,6 +2112,8 @@ size_t nextPoint(const std::wstring &value, size_t at) {
   return ui_text::next(value, at);
 }
 void edited() {
+  if (inputFocus >= 560 && inputFocus <= 564)
+    comparisonDirty = true;
   if (inputFocus == 300) {
     featureOffset = 0;
     listPosition.snap(0);
@@ -1844,7 +2183,9 @@ void tabFocus(bool reverse) {
   bool modal = dialog.open || dialog.opacity.value(clockNow()) > .01;
   for (auto &h : hits)
     if (h.enabled && h.id != 1 && h.id != 2 &&
-        (!modal || (h.id == 9001 || h.id == 9002 || (h.id >= 9100 && h.id <= 9102))))
+        (!modal || (h.id == 9001 || h.id == 9002 ||
+                    ((h.id >= 9100 && h.id <= 9102) ||
+                     ((h.id >= 9200 && h.id < 9206) || (h.id >= 9300 && h.id < 9304))))))
       order.push_back(&h);
   std::stable_sort(order.begin(), order.end(), [](const Hit *a, const Hit *b) {
     return a->rect.y == b->rect.y ? a->rect.x < b->rect.x : a->rect.y < b->rect.y;
@@ -1889,7 +2230,9 @@ void keyDown(WPARAM key) {
     if (key == VK_TAB)
       tabFocus(shift);
     else if (key == VK_RETURN || key == VK_SPACE)
-      safeActivate(dialog.languagePicker ? keyboardFocus : (keyboardFocus == 9002 ? 9002 : 9001));
+      safeActivate((dialog.languagePicker || dialog.gamePicker || dialog.profilePicker)
+                       ? keyboardFocus
+                       : (keyboardFocus == 9002 ? 9002 : 9001));
     return;
   }
   if (control && key == 'K') {
@@ -2009,6 +2352,18 @@ void requestClose() {
     dismissDialog(false);
     return;
   }
+  if (comparisonDirty) {
+    showDialog(
+        tr(L"Målingerne er ikke gemt"),
+        tr(L"Annuller og gem under Målinger, eller kassér de indtastede ændringer før du lukker."),
+        tr(L"Kassér og luk"),
+        [] {
+          comparisonDirty = false;
+          requestClose();
+        },
+        true);
+    return;
+  }
   if (job.valid()) {
     closeRequested = true;
     setStatus(tr(L"Afslutter den aktuelle ændring og lukker derefter."), 1);
@@ -2029,7 +2384,11 @@ void requestClose() {
   DestroyWindow(window);
 }
 void screenshot(const std::wstring &name) {
+  invalidate();
   UpdateWindow(window);
+  DwmFlush();
+  GdiFlush();
+  Sleep(30); // Capture the presented frame, not a queued transition frame.
   RECT r;
   GetClientRect(window, &r);
   HDC screen = GetDC(window), memory = CreateCompatibleDC(screen);
@@ -2121,6 +2480,59 @@ void smokeTick() {
     paint();
     if (canvas.surfaceAllocations() != allocations)
       smokeFailed = true;
+    const auto originalGame = game;
+    const auto originalDirty = comparisonDirty;
+    const auto originalResults = results;
+    const auto originalNote = comparisonNote;
+    const auto originalRecent = recentGames;
+    const auto recentPreference = tune::read(L"Software\\Maxifying\\UI", L"RecentGames");
+    wchar_t testExecutable[32768]{};
+    GetModuleFileNameW(nullptr, testExecutable, 32768);
+    game = testExecutable;
+    const auto measurementKey = comparisonKey();
+    const auto measurementOriginal = tune::read(measurementKey, L"Record");
+    results = {L"100", L"60", L"90", L"55"};
+    comparisonNote = L"UI test: manually entered sample";
+    saveComparison();
+    results.assign(4, L"");
+    loadComparison();
+    const bool measurementRoundtrip = results[0] == L"100" && results[2] == L"90" &&
+                                      comparisonNote == L"UI test: manually entered sample";
+    rememberRecentGame();
+    loadRecentGames();
+    const bool recentRoundtrip = !recentGames.empty() && recentGames.front() == game;
+    tune::write(measurementKey, L"Record", measurementOriginal);
+    tune::write(L"Software\\Maxifying\\UI", L"RecentGames", recentPreference);
+    game = originalGame;
+    results = originalResults;
+    comparisonNote = originalNote;
+    recentGames = originalRecent;
+    comparisonDirty = originalDirty;
+    changeFeature(0, false);
+    const bool changesReviewed = dialog.open && !job.valid();
+    dismissDialog(false);
+    dialog.opacity.snap(0);
+    comparisonDirty = true;
+    const auto beforeGame = game;
+    selectGamePath(L"C:\\NeverLaunched\\sample.exe");
+    const bool unsavedGuard = dialog.open && game == beforeGame && comparisonDirty;
+    dismissDialog(false);
+    dialog.opacity.snap(0);
+    comparisonDirty = originalDirty;
+    safeActivate(591);
+    paint();
+    const bool profilesAccessible = dialog.profilePicker;
+    dismissDialog(false);
+    dialog.opacity.snap(0);
+    savedOnly = true;
+    filterFeatures();
+    const bool recoveryFilter = std::all_of(filtered.begin(), filtered.end(),
+                                            [](size_t index) { return states[index].backup; });
+    savedOnly = false;
+    filterFeatures();
+    if (!measurementRoundtrip || !recentRoundtrip || !changesReviewed || !recoveryFilter ||
+        !unsavedGuard || !profilesAccessible)
+      smokeFailed = true;
     const auto originalLanguage = l10n::selected.load();
     const auto originalPreference = tune::read(L"Software\\Maxifying\\UI", L"Language");
     bool languagesWork = true;
@@ -2183,6 +2595,12 @@ void smokeTick() {
       smokeFailed = true;
     navigate(0);
     std::ofstream report("maxifying-ui-test.txt");
+    report << (measurementRoundtrip && recentRoundtrip && changesReviewed && recoveryFilter &&
+                       unsavedGuard && profilesAccessible
+                   ? "PASS"
+                   : "FAIL")
+           << ": per-game results/recent games roundtrip; review precedes changes; recovery "
+              "filter; originals restored\n";
     report << (languagesWork ? "PASS" : "FAIL")
            << ": language picker keyboard selection persists all three preferences; original "
               "restored\n";
@@ -2280,6 +2698,29 @@ void smokeTick() {
   case 14:
     languageMenu();
     break;
+  case 15:
+    dismissDialog(false);
+    navigate(2);
+    switchFocusTab(4);
+    break;
+  case 16:
+    game = L"C:\\Games\\Example\\game.exe";
+    results = {L"100", L"60", L"90", L"55"};
+    comparisonNote = L"Demo: manually entered results";
+    break;
+  case 17:
+    game.clear();
+    results.assign(4, L"");
+    comparisonNote.clear();
+    safeActivate(587);
+    break;
+  case 18:
+    safeActivate(588);
+    break;
+  case 19:
+    dismissDialog(false);
+    safeActivate(591);
+    break;
   default:
     PostMessageW(window, WM_CLOSE, 0, 0);
     break;
@@ -2303,6 +2744,8 @@ LRESULT CALLBACK procedure(HWND w, UINT message, WPARAM a, LPARAM b) {
     notice.snap(1);
     try {
       game = tune::selectedGame();
+      loadRecentGames();
+      loadComparison();
     } catch (...) {
     }
     refreshStates();
@@ -2330,7 +2773,8 @@ LRESULT CALLBACK procedure(HWND w, UINT message, WPARAM a, LPARAM b) {
     return 0;
   }
   case WM_MOUSEMOVE: {
-    if ((pressed == 300 || pressed == 510) && inputFocus == pressed) {
+    if ((pressed == 300 || pressed == 510 || (pressed >= 560 && pressed <= 564)) &&
+        inputFocus == pressed) {
       auto f =
           std::find_if(hits.begin(), hits.end(), [](const Hit &h) { return h.id == inputFocus; });
       if (f != hits.end()) {
@@ -2416,7 +2860,7 @@ LRESULT CALLBACK procedure(HWND w, UINT message, WPARAM a, LPARAM b) {
       listPosition.target(next, now);
       animate();
     }
-    if (page == 2 && focusTab) {
+    if (page == 2 && focusTab >= 1 && focusTab <= 3) {
       size_t count = focusTab == 1   ? processes.size()
                      : focusTab == 2 ? startups.size()
                                      : inventory.apps.size();
@@ -2555,7 +2999,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, LPWSTR arguments, int show) {
   cls.hCursor = LoadCursorW(nullptr, IDC_ARROW);
   if (!RegisterClassW(&cls))
     return 1;
-  HWND w = CreateWindowW(cls.lpszClassName, L"Maxifying 0.6",
+  HWND w = CreateWindowW(cls.lpszClassName, L"Maxifying 0.7",
                          WS_POPUP | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX, CW_USEDEFAULT,
                          CW_USEDEFAULT, pixel(ui::width), pixel(ui::height), nullptr, nullptr,
                          instance, nullptr);
